@@ -549,26 +549,324 @@ case 'help': {
                 break
             }
 
-            case 'play':
-            case 'song': {
-                try {
-                    if (!text) return reply(`❌ Please provide a song name!\n\nExample: ${currentPrefix}play Despacito`);
+            case 'define': {
+    try {
+        if (!text) {
+            return reply('❌ Please provide a word to define.\n\n*Example:* ' + currentPrefix + 'define artificial intelligence');
+        }
+
+        const word = encodeURIComponent(text.trim());
+        
+        // Send loading message
+        const loadingMsg = await reply('🔍 Searching for definition...');
+
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+
+        if (!response.ok) {
+            return reply('❌ Failed to fetch definition. Please check the word spelling and try again.');
+        }
+
+        const data = await response.json();
+
+        if (!data || !data[0] || !data[0].meanings || data[0].meanings.length === 0) {
+            return reply(`❌ No definitions found for "${text}". Please check the spelling and try again.`);
+        }
+
+        const definitionData = data[0];
+        let message = `📖 *DICTIONARY DEFINITION*\n\n`;
+        message += `🔤 *Word:* ${definitionData.word}\n`;
+        
+        if (definitionData.phonetic) {
+            message += `🔊 *Pronunciation:* ${definitionData.phonetic}\n`;
+        }
+        
+        message += `\n`;
+
+        // Get multiple meanings if available
+        definitionData.meanings.forEach((meaning, index) => {
+            if (index < 3) { // Limit to 3 meanings
+                message += `📝 *${meaning.partOfSpeech.toUpperCase()}*\n`;
+                
+                if (meaning.definitions && meaning.definitions[0]) {
+                    message += `• ${meaning.definitions[0].definition}\n`;
                     
-                    await reply('🔍 Searching for your song...');
-                    
-                    const searchText = `🎵 *YOUTUBE MUSIC SEARCH*\n\n` +
-                                      `🔍 *Searching for:* ${text}\n` +
-                                      `⏳ *Status:* Processing...\n\n` +
-                                      `⚠️ *Note:* YouTube download feature is under development.\n` +
-                                      `🔧 *Developer:* Working on implementation`;
-                    
-                    await XeonBotInc.sendMessage(m.chat, { text: searchText }, { quoted: m });
-                } catch (error) {
-                    console.error('Play command error:', error);
-                    await reply('❌ Error occurred while searching for the song.');
+                    if (meaning.definitions[0].example) {
+                        message += `💡 *Example:* "${meaning.definitions[0].example}"\n`;
+                    }
                 }
-                break
+                
+                if (meaning.synonyms && meaning.synonyms.length > 0) {
+                    message += `🔄 *Synonyms:* ${meaning.synonyms.slice(0, 3).join(', ')}\n`;
+                }
+                
+                message += `\n`;
             }
+        });
+
+        message += `🐞 *Powered by Ladybug Dictionary*`;
+
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: message,
+            contextInfo: {
+                externalAdReply: {
+                    title: `📖 Definition: ${definitionData.word}`,
+                    body: `Dictionary powered by Ladybug MD`,
+                    thumbnailUrl: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    sourceUrl: 'https://github.com/mrnta-source',
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error("Dictionary error:", error);
+        reply('❌ An error occurred while fetching the definition. Please try again later.');
+    }
+}
+break;
+
+case 'yts': 
+case 'ytsearch': {
+    if (!text) return reply(`❌ Please provide a search term.\n\n*Example:* ${currentPrefix + command} Imagine Dragons`);
+    
+    try {
+        // Send loading message
+        const loadingMsg = await reply('🔍 Searching YouTube...');
+        
+        let yts = require("yt-search");
+        let search = await yts(text);
+        let videos = search.all;
+
+        if (!videos || videos.length === 0) {
+            return reply('❌ No videos found for your search.');
+        }
+
+        // Prepare the combined message for up to 8 videos
+        let message = `🎵 *YOUTUBE SEARCH RESULTS*\n\n`;
+        message += `🔍 *Query:* ${text}\n`;
+        message += `📊 *Results:* ${videos.length} videos found\n\n`;
+        
+        const numVideos = Math.min(videos.length, 8);
+
+        for (let i = 0; i < numVideos; i++) {
+            const video = videos[i];
+            const number = i + 1;
+            
+            message += `*${number}.* 📹 ${video.title}\n`;
+            message += `⏱️ Duration: ${video.timestamp}\n`;
+            message += `👀 Views: ${video.views.toLocaleString()}\n`;
+            message += `👤 Channel: ${video.author.name}\n`;
+            message += `📅 Uploaded: ${video.ago}\n`;
+            message += `🔗 ${video.url}\n\n`;
+        }
+
+        message += `💡 *Tip:* Use ${currentPrefix}play <song name> to download audio\n`;
+        message += `🐞 *Powered by Ladybug Search*`;
+
+        await XeonBotInc.sendMessage(m.chat, {
+            text: message,
+            contextInfo: {
+                externalAdReply: {
+                    title: `🎵 YouTube Search: ${text}`,
+                    body: `Found ${numVideos} results`,
+                    thumbnailUrl: videos[0].thumbnail || 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    sourceUrl: videos[0].url,
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error('YouTube search error:', error);
+        reply('❌ Error occurred while searching YouTube. Please try again later.');
+    }
+}
+break;
+
+case 'play': {
+    try {
+        // Check if user is premium
+        if (!isPremium && !isOwner) {
+            return reply(`🔒 *PREMIUM FEATURE*\n\n` +
+                        `This is a premium feature. Upgrade to premium to access:\n` +
+                        `• High-quality music downloads\n` +
+                        `• Multiple format options\n` +
+                        `• Fast download speeds\n` +
+                        `• No download limits\n\n` +
+                        `💎 Contact owner to get premium access!\n` +
+                        `📞 ${currentPrefix}owner`);
+        }
+
+        if (!text) {
+            return reply(`🎵 *PREMIUM MUSIC DOWNLOADER*\n\n` +
+                        `Please provide a song name or YouTube URL.\n\n` +
+                        `*Examples:*\n` +
+                        `• ${currentPrefix}play Imagine Dragons Believer\n` +
+                        `• ${currentPrefix}play https://youtube.com/watch?v=...\n\n` +
+                        `💎 *Premium Features:*\n` +
+                        `• Multiple quality options\n` +
+                        `• Fast downloads\n` +
+                        `• High-quality audio`);
+        }
+
+        // Send loading message
+        const loadingMsg = await reply('🎵 *PREMIUM DOWNLOADER ACTIVE*\n\n' +
+                                     '🔍 Searching for your song...\n' +
+                                     '⏳ Please wait while we prepare your download...');
+
+        const yts = require("yt-search");
+        const axios = require('axios');
+        const fs = require('fs');
+        const path = require('path');
+
+        let search = await yts(text);
+        if (!search.all || search.all.length === 0) {
+            return reply('❌ No songs found for your search.');
+        }
+
+        let video = search.all[0];
+        let link = video.url;
+
+        // Quality selection message
+        const qualityMsg = `🎵 *SONG FOUND*\n\n` +
+                          `📹 *Title:* ${video.title}\n` +
+                          `👤 *Channel:* ${video.author.name}\n` +
+                          `⏱️ *Duration:* ${video.timestamp}\n` +
+                          `👀 *Views:* ${video.views.toLocaleString()}\n\n` +
+                          `🎧 *SELECT AUDIO QUALITY:*\n\n` +
+                          `1️⃣ *High Quality* (320kbps) - ~${Math.round(video.seconds * 0.04)}MB\n` +
+                          `2️⃣ *Medium Quality* (192kbps) - ~${Math.round(video.seconds * 0.024)}MB\n` +
+                          `3️⃣ *Low Quality* (128kbps) - ~${Math.round(video.seconds * 0.016)}MB\n\n` +
+                          `💡 Reply with *1*, *2*, or *3* to select quality\n` +
+                          `⏰ Selection expires in 30 seconds`;
+
+        const qualityResponse = await XeonBotInc.sendMessage(m.chat, {
+            text: qualityMsg,
+            contextInfo: {
+                externalAdReply: {
+                    title: `🎵 ${video.title}`,
+                    body: `Premium Music Downloader`,
+                    thumbnailUrl: video.thumbnail,
+                    sourceUrl: video.url,
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+
+        // Wait for user quality selection
+        const qualityChoice = await new Promise((resolve) => {
+            const timeout = setTimeout(() => resolve('2'), 30000); // Default to medium quality after 30s
+            
+            const listener = (msg) => {
+                if (msg.key.remoteJid === m.chat && 
+                    msg.key.participant === m.sender && 
+                    ['1', '2', '3'].includes(msg.message?.conversation || msg.message?.extendedTextMessage?.text)) {
+                    clearTimeout(timeout);
+                    XeonBotInc.ev.off('messages.upsert', listener);
+                    resolve(msg.message?.conversation || msg.message?.extendedTextMessage?.text);
+                }
+            };
+            
+            XeonBotInc.ev.on('messages.upsert', ({ messages }) => {
+                messages.forEach(listener);
+            });
+        });
+
+        // Quality settings
+        const qualitySettings = {
+            '1': { bitrate: '320kbps', quality: 'High', size: 'Large' },
+            '2': { bitrate: '192kbps', quality: 'Medium', size: 'Medium' },
+            '3': { bitrate: '128kbps', quality: 'Low', size: 'Small' }
+        };
+
+        const selectedQuality = qualitySettings[qualityChoice] || qualitySettings['2'];
+
+        await reply(`🎧 *DOWNLOADING...*\n\n` +
+                   `📹 *Song:* ${video.title}\n` +
+                   `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
+                   `📦 *Size:* ${selectedQuality.size}\n` +
+                   `⏳ *Status:* Processing...\n\n` +
+                   `💎 *Premium Download in Progress*`);
+
+        // Premium API endpoints for high-quality downloads
+        const premiumApis = [
+            `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${encodeURIComponent(link)}`,
+            `https://apis.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(link)}`,
+            `https://api.dreaded.site/api/ytdl/audio?url=${encodeURIComponent(link)}`,
+            `https://xploader-api.vercel.app/ytmp3?url=${encodeURIComponent(link)}`
+        ];
+
+        let downloadSuccess = false;
+
+        for (const api of premiumApis) {
+            try {
+                let response = await fetch(api);
+                let data = await response.json();
+
+                if (data.status === 200 || data.success || data.result) {
+                    let audioUrl = data.result?.downloadUrl || data.url || data.download || data.result;
+                    
+                    if (audioUrl) {
+                        // Send as audio message
+                        await XeonBotInc.sendMessage(m.chat, {
+                            audio: { url: audioUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: `${video.title}.mp3`,
+                            contextInfo: {
+                                externalAdReply: {
+                                    title: video.title,
+                                    body: `${selectedQuality.quality} Quality • ${video.author.name}`,
+                                    thumbnailUrl: video.thumbnail,
+                                    sourceUrl: video.url,
+                                    mediaType: 1
+                                }
+                            }
+                        }, { quoted: m });
+
+                        // Send as document for download
+                        await XeonBotInc.sendMessage(m.chat, {
+                            document: { url: audioUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
+                            caption: `🎵 *PREMIUM DOWNLOAD COMPLETE*\n\n` +
+                                    `📹 *Title:* ${video.title}\n` +
+                                    `👤 *Artist:* ${video.author.name}\n` +
+                                    `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
+                                    `⏱️ *Duration:* ${video.timestamp}\n\n` +
+                                    `💎 *Downloaded via Ladybug Premium*\n` +
+                                    `🐞 *Enjoy your music!*`
+                        }, { quoted: m });
+
+                        downloadSuccess = true;
+                        break;
+                    }
+                }
+            } catch (apiError) {
+                console.log(`API ${api} failed:`, apiError);
+                continue;
+            }
+        }
+
+        if (!downloadSuccess) {
+            return reply(`❌ *DOWNLOAD FAILED*\n\n` +
+                        `Unable to download the requested song.\n` +
+                        `This might be due to:\n` +
+                        `• Copyright restrictions\n` +
+                        `• Server issues\n` +
+                        `• Invalid URL\n\n` +
+                        `🔄 Please try again with a different song.`);
+        }
+
+    } catch (error) {
+        console.error('Premium play error:', error);
+        reply(`❌ *PREMIUM DOWNLOAD ERROR*\n\n` +
+              `An error occurred during download.\n` +
+              `Please try again or contact support.\n\n` +
+              `Error: ${error.message}`);
+    }
+}
+break;
+
 
             case 'anime':
             case 'waifu': {
