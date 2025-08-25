@@ -549,7 +549,7 @@ case 'help': {
                 break
             }
 
-            case 'define': {
+                        case 'define': {
     try {
         if (!text) {
             return reply('❌ Please provide a word to define.\n\n*Example:* ' + currentPrefix + 'define artificial intelligence');
@@ -685,8 +685,10 @@ break;
 
 case 'play': {
     try {
-        // Check if user is premium
-        if (!isPremium && !isOwner) {
+        // Check if user is premium or owner
+        const isPremiumUser = premium.includes(m.sender) || owner.includes(m.sender) || m.sender === botNumber;
+        
+        if (!isPremiumUser) {
             return reply(`🔒 *PREMIUM FEATURE*\n\n` +
                         `This is a premium feature. Upgrade to premium to access:\n` +
                         `• High-quality music downloads\n` +
@@ -710,14 +712,11 @@ case 'play': {
         }
 
         // Send loading message
-        const loadingMsg = await reply('🎵 *PREMIUM DOWNLOADER ACTIVE*\n\n' +
-                                     '🔍 Searching for your song...\n' +
-                                     '⏳ Please wait while we prepare your download...');
+        await reply('🎵 *PREMIUM DOWNLOADER ACTIVE*\n\n' +
+                   '🔍 Searching for your song...\n' +
+                   '⏳ Please wait while we prepare your download...');
 
         const yts = require("yt-search");
-        const axios = require('axios');
-        const fs = require('fs');
-        const path = require('path');
 
         let search = await yts(text);
         if (!search.all || search.all.length === 0) {
@@ -740,7 +739,7 @@ case 'play': {
                           `💡 Reply with *1*, *2*, or *3* to select quality\n` +
                           `⏰ Selection expires in 30 seconds`;
 
-        const qualityResponse = await XeonBotInc.sendMessage(m.chat, {
+        await XeonBotInc.sendMessage(m.chat, {
             text: qualityMsg,
             contextInfo: {
                 externalAdReply: {
@@ -753,24 +752,34 @@ case 'play': {
             }
         }, { quoted: m });
 
-        // Wait for user quality selection
-        const qualityChoice = await new Promise((resolve) => {
-            const timeout = setTimeout(() => resolve('2'), 30000); // Default to medium quality after 30s
+        // Wait for user quality selection with a simpler approach
+        let qualityChoice = '2'; // Default to medium quality
+        
+        // Set up a temporary listener for quality selection
+        const qualityListener = async (update) => {
+            const { messages } = update;
+            if (!messages || messages.length === 0) return;
             
-            const listener = (msg) => {
-                if (msg.key.remoteJid === m.chat && 
-                    msg.key.participant === m.sender && 
-                    ['1', '2', '3'].includes(msg.message?.conversation || msg.message?.extendedTextMessage?.text)) {
-                    clearTimeout(timeout);
-                    XeonBotInc.ev.off('messages.upsert', listener);
-                    resolve(msg.message?.conversation || msg.message?.extendedTextMessage?.text);
+            const msg = messages[0];
+            if (msg.key.remoteJid === m.chat && 
+                msg.key.participant === m.sender &&
+                msg.message) {
+                
+                const userInput = msg.message.conversation || 
+                                msg.message.extendedTextMessage?.text || '';
+                
+                if (['1', '2', '3'].includes(userInput.trim())) {
+                    qualityChoice = userInput.trim();
+                    XeonBotInc.ev.off('messages.upsert', qualityListener);
                 }
-            };
-            
-            XeonBotInc.ev.on('messages.upsert', ({ messages }) => {
-                messages.forEach(listener);
-            });
-        });
+            }
+        };
+
+        XeonBotInc.ev.on('messages.upsert', qualityListener);
+
+        // Wait 15 seconds for user input
+        await new Promise(resolve => setTimeout(resolve, 15000));
+        XeonBotInc.ev.off('messages.upsert', qualityListener);
 
         // Quality settings
         const qualitySettings = {
@@ -800,49 +809,64 @@ case 'play': {
 
         for (const api of premiumApis) {
             try {
+                console.log(`Trying API: ${api}`);
                 let response = await fetch(api);
                 let data = await response.json();
+                
+                console.log(`API Response:`, data);
 
-                if (data.status === 200 || data.success || data.result) {
-                    let audioUrl = data.result?.downloadUrl || data.url || data.download || data.result;
+                // Check for different response formats
+                let audioUrl = null;
+                if (data.status === 200 || data.success) {
+                    audioUrl = data.result?.downloadUrl || 
+                              data.result?.download || 
+                              data.url || 
+                              data.download ||
+                              data.result;
+                } else if (data.downloadUrl) {
+                    audioUrl = data.downloadUrl;
+                } else if (typeof data.result === 'string') {
+                    audioUrl = data.result;
+                }
+                
+                if (audioUrl && typeof audioUrl === 'string' && audioUrl.startsWith('http')) {
+                    console.log(`Found audio URL: ${audioUrl}`);
                     
-                    if (audioUrl) {
-                        // Send as audio message
-                        await XeonBotInc.sendMessage(m.chat, {
-                            audio: { url: audioUrl },
-                            mimetype: 'audio/mpeg',
-                            fileName: `${video.title}.mp3`,
-                            contextInfo: {
-                                externalAdReply: {
-                                    title: video.title,
-                                    body: `${selectedQuality.quality} Quality • ${video.author.name}`,
-                                    thumbnailUrl: video.thumbnail,
-                                    sourceUrl: video.url,
-                                    mediaType: 1
-                                }
+                    // Send as audio message
+                    await XeonBotInc.sendMessage(m.chat, {
+                        audio: { url: audioUrl },
+                        mimetype: 'audio/mpeg',
+                        fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
+                        contextInfo: {
+                            externalAdReply: {
+                                title: video.title,
+                                body: `${selectedQuality.quality} Quality • ${video.author.name}`,
+                                thumbnailUrl: video.thumbnail,
+                                sourceUrl: video.url,
+                                mediaType: 1
                             }
-                        }, { quoted: m });
+                        }
+                    }, { quoted: m });
 
-                        // Send as document for download
-                        await XeonBotInc.sendMessage(m.chat, {
-                            document: { url: audioUrl },
-                            mimetype: 'audio/mpeg',
-                            fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
-                            caption: `🎵 *PREMIUM DOWNLOAD COMPLETE*\n\n` +
-                                    `📹 *Title:* ${video.title}\n` +
-                                    `👤 *Artist:* ${video.author.name}\n` +
-                                    `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
-                                    `⏱️ *Duration:* ${video.timestamp}\n\n` +
-                                    `💎 *Downloaded via Ladybug Premium*\n` +
-                                    `🐞 *Enjoy your music!*`
-                        }, { quoted: m });
+                    // Send as document for download
+                    await XeonBotInc.sendMessage(m.chat, {
+                        document: { url: audioUrl },
+                        mimetype: 'audio/mpeg',
+                        fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
+                        caption: `🎵 *PREMIUM DOWNLOAD COMPLETE*\n\n` +
+                                `📹 *Title:* ${video.title}\n` +
+                                `👤 *Artist:* ${video.author.name}\n` +
+                                `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
+                                `⏱️ *Duration:* ${video.timestamp}\n\n` +
+                                `💎 *Downloaded via Ladybug Premium*\n` +
+                                `🐞 *Enjoy your music!*`
+                    }, { quoted: m });
 
-                        downloadSuccess = true;
-                        break;
-                    }
+                    downloadSuccess = true;
+                    break;
                 }
             } catch (apiError) {
-                console.log(`API ${api} failed:`, apiError);
+                console.log(`API ${api} failed:`, apiError.message);
                 continue;
             }
         }
