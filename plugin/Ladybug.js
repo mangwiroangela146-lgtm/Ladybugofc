@@ -76,210 +76,167 @@ module.exports = async (XeonBotInc, m, chatUpdate, store) => {
                 break
             }
 
-                        case 'menu':
-            case 'help': {
-                let menuText = `╭─────「 *LADYBUG MENU* 」─────╮\n`
-                menuText += `│ 🤖 *Bot:* ${global.botname}\n`
-                menuText += `│ 👤 *User:* ${pushname}\n`
-                menuText += `│ 📅 *Date:* ${new Date().toLocaleDateString()}\n`
-                menuText += `│ ⏰ *Time:* ${new Date().toLocaleTimeString()}\n`
-                menuText += `│ ⏱️ *Uptime:* ${runtime(process.uptime())}\n`
-                menuText += `╰─────────────────────────────╯\n\n`
-                
-                menuText += `┌─⊷ *GENERAL COMMANDS*\n`
-                menuText += `│• ${prefix}ping - Check bot speed\n`
-                menuText += `│• ${prefix}menu - Show this menu\n`
-                menuText += `│• ${prefix}runtime - Bot uptime\n`
-                menuText += `│• ${prefix}owner - Owner info\n`
-                menuText += `│• ${prefix}script - Bot script info\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *YOUTUBE COMMANDS*\n`
-                menuText += `│• ${prefix}yts <query> - YouTube search\n`
-                menuText += `│• ${prefix}play <song> - Download audio\n`
-                menuText += `│• ${prefix}song <title> - Download music\n`
-                menuText += `│• ${prefix}video <title> - Download video\n`
-                menuText += `│• ${prefix}ytmp4 <title> - Download MP4\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *ANIME COMMANDS*\n`
-                menuText += `│• ${prefix}anime <category> - Anime images\n`
-                menuText += `│• ${prefix}waifu - Random waifu\n`
-                menuText += `│• ${prefix}neko - Random neko\n`
-                menuText += `│• ${prefix}animepic <type> - Anime pics\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *NSFW COMMANDS* 🔞\n`
-                menuText += `│• ${prefix}nsfw <category> - NSFW content\n`
-                menuText += `│ ⚠️ *Admin only in groups*\n`
-                menuText += `│ 📝 Categories: waifu, neko, trap\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *FUN COMMANDS*\n`
-                menuText += `│• ${prefix}joke - Random joke\n`
-                menuText += `│• ${prefix}quote - Inspirational quote\n`
-                menuText += `│• ${prefix}fact - Random fact\n`
-                menuText += `│• ${prefix}meme - Random meme\n`
-                menuText += `│• ${prefix}truth - Truth question\n`
-                menuText += `│• ${prefix}dare - Dare challenge\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *UTILITY COMMANDS*\n`
-                menuText += `│• ${prefix}weather <city> - Weather info\n`
-                menuText += `│• ${prefix}translate <text> - Translate text\n`
-                menuText += `│• ${prefix}qr <text> - Generate QR code\n`
-                menuText += `│• ${prefix}shorturl <url> - Shorten URL\n`
-                menuText += `│• ${prefix}calculator <math> - Calculate\n`
-                menuText += `│• ${prefix}base64 <text> - Encode/decode\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `┌─⊷ *OWNER COMMANDS*\n`
-                menuText += `│• ${prefix}restart - Restart bot\n`
-                menuText += `│• ${prefix}eval - Execute code\n`
-                menuText += `│• ${prefix}exec - Execute terminal\n`
-                menuText += `│• ${prefix}broadcast - Send to all\n`
-                menuText += `│• ${prefix}block - Block user\n`
-                menuText += `│• ${prefix}unblock - Unblock user\n`
-                menuText += `└────────────⊷\n\n`
-                
-                menuText += `📊 *Total Commands:* 35+\n`
-                menuText += `🐞 *Powered by Ladybug v2.0*\n`
-                menuText += `💻 *Developer:* MR UNIQUE HACKER`
+    case 'menu':
+case 'help': {
+    try {
+        // Runtime function
+        function runtime(seconds) {
+            seconds = Number(seconds);
+            var d = Math.floor(seconds / (3600 * 24));
+            var h = Math.floor(seconds % (3600 * 24) / 3600);
+            var m = Math.floor(seconds % 3600 / 60);
+            var s = Math.floor(seconds % 60);
+            var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
+            var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+            var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+            var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+            return dDisplay + hDisplay + mDisplay + sDisplay;
+        }
 
-                // Audio URL for menu sound
-                const menuAudioUrl = "https://github.com/DGXeon/Tiktokmusic-API/raw/master/tiktokmusic/sound2.mp3"
+        // Get user name safely
+        const pushname = m.pushName || m.sender.split('@')[0] || 'User';
+        
+        // Get prefix safely
+        const prefix = global.prefix || '.';
+        
+        // Get bot name safely
+        const botname = global.botname || 'LADYBUG BOT';
 
-                await XeonBotInc.sendMessage(m.chat, {
-                    audio: { url: menuAudioUrl },
-                    mimetype: 'audio/mp4',
-                    ptt: true,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `🐞 ${global.botname} Menu`,
-                            body: `Hello ${pushname}! Here's the complete menu`,
-                            thumbnailUrl: 'https://i.imgur.com/your-bot-image.jpg', // Replace with your bot image
-                            sourceUrl: 'https://github.com/mrunqiuehacker',
-                            mediaType: 2,
-                            mediaUrl: 'https://github.com/mrunqiuehacker'
-                        }
+        let menuText = `╭─────「 *LADYBUG MENU* 」─────╮\n`
+        menuText += `│ 🤖 *Bot:* ${botname}\n`
+        menuText += `│ 👤 *User:* ${pushname}\n`
+        menuText += `│ 📅 *Date:* ${new Date().toLocaleDateString()}\n`
+        menuText += `│ ⏰ *Time:* ${new Date().toLocaleTimeString()}\n`
+        menuText += `│ ⏱️ *Uptime:* ${runtime(process.uptime())}\n`
+        menuText += `╰─────────────────────────────╯\n\n`
+        
+        menuText += `┌─⊷ *GENERAL COMMANDS*\n`
+        menuText += `│• ${prefix}ping - Check bot speed\n`
+        menuText += `│• ${prefix}menu - Show this menu\n`
+        menuText += `│• ${prefix}runtime - Bot uptime\n`
+        menuText += `│• ${prefix}owner - Owner info\n`
+        menuText += `│• ${prefix}script - Bot script info\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *YOUTUBE COMMANDS*\n`
+        menuText += `│• ${prefix}yts <query> - YouTube search\n`
+        menuText += `│• ${prefix}play <song> - Download audio\n`
+        menuText += `│• ${prefix}song <title> - Download music\n`
+        menuText += `│• ${prefix}video <title> - Download video\n`
+        menuText += `│• ${prefix}ytmp4 <title> - Download MP4\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *ANIME COMMANDS*\n`
+        menuText += `│• ${prefix}anime <category> - Anime images\n`
+        menuText += `│• ${prefix}waifu - Random waifu\n`
+        menuText += `│• ${prefix}neko - Random neko\n`
+        menuText += `│• ${prefix}animepic <type> - Anime pics\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *NSFW COMMANDS* 🔞\n`
+        menuText += `│• ${prefix}nsfw <category> - NSFW content\n`
+        menuText += `│ ⚠️ *Admin only in groups*\n`
+        menuText += `│ 📝 Categories: waifu, neko, trap\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *FUN COMMANDS*\n`
+        menuText += `│• ${prefix}joke - Random joke\n`
+        menuText += `│• ${prefix}quote - Inspirational quote\n`
+        menuText += `│• ${prefix}fact - Random fact\n`
+        menuText += `│• ${prefix}meme - Random meme\n`
+        menuText += `│• ${prefix}truth - Truth question\n`
+        menuText += `│• ${prefix}dare - Dare challenge\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *UTILITY COMMANDS*\n`
+        menuText += `│• ${prefix}weather <city> - Weather info\n`
+        menuText += `│• ${prefix}translate <text> - Translate text\n`
+        menuText += `│• ${prefix}qr <text> - Generate QR code\n`
+        menuText += `│• ${prefix}shorturl <url> - Shorten URL\n`
+        menuText += `│• ${prefix}calculator <math> - Calculate\n`
+        menuText += `│• ${prefix}base64 <text> - Encode/decode\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `┌─⊷ *OWNER COMMANDS*\n`
+        menuText += `│• ${prefix}restart - Restart bot\n`
+        menuText += `│• ${prefix}eval - Execute code\n`
+        menuText += `│• ${prefix}exec - Execute terminal\n`
+        menuText += `│• ${prefix}broadcast - Send to all\n`
+        menuText += `│• ${prefix}block - Block user\n`
+        menuText += `│• ${prefix}unblock - Unblock user\n`
+        menuText += `└────────────⊷\n\n`
+        
+        menuText += `📊 *Total Commands:* 35+\n`
+        menuText += `🐞 *Powered by Ladybug v2.0*\n`
+        menuText += `💻 *Developer:* MR UNIQUE HACKER`
+
+        // Try to send with audio first, fallback to text only
+        try {
+            const menuAudioUrl = "https://github.com/DGXeon/Tiktokmusic-API/raw/master/tiktokmusic/sound2.mp3"
+            
+            await XeonBotInc.sendMessage(m.chat, {
+                audio: { url: menuAudioUrl },
+                mimetype: 'audio/mp4',
+                ptt: true,
+                contextInfo: {
+                    externalAdReply: {
+                        title: `🐞 ${botname} Menu`,
+                        body: `Hello ${pushname}! Here's the complete menu`,
+                        thumbnailUrl: 'https://i.imgur.com/your-bot-image.jpg',
+                        sourceUrl: 'https://github.com/mrunqiuehacker',
+                        mediaType: 2,
+                        mediaUrl: 'https://github.com/mrunqiuehacker'
                     }
-                }, { quoted: m })
+                }
+            }, { quoted: m })
+        } catch (audioError) {
+            console.log('Audio send failed, continuing with text menu...')
+        }
 
-                // Send menu text after audio
-                await XeonBotInc.sendMessage(m.chat, {
-                    text: menuText,
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363161513685998@newsletter',
-                            newsletterName: 'Ladybug MD',
-                            serverMessageId: -1
-                        },
-                        externalAdReply: {
-                            title: `🐞 ${global.botname} Commands`,
-                            body: `Total: 35+ Commands Available`,
-                            thumbnailUrl: 'https://i.imgur.com/your-menu-image.jpg', // Replace with menu image
-                            sourceUrl: 'https://github.com/mrunqiuehacker',
-                            mediaType: 1,
-                            mediaUrl: 'https://github.com/mrunqiuehacker'
-                        }
-                    }
-                }, { quoted: m })
-                break
+        // Send menu text
+        await XeonBotInc.sendMessage(m.chat, {
+            text: menuText,
+            contextInfo: {
+                forwardingScore: 1,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: '120363161513685998@newsletter',
+                    newsletterName: 'Ladybug MD',
+                    serverMessageId: -1
+                },
+                externalAdReply: {
+                    title: `🐞 ${botname} Commands`,
+                    body: `Total: 35+ Commands Available`,
+                    thumbnailUrl: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    sourceUrl: 'https://github.com/mrunqiuehacker',
+                    mediaType: 1,
+                    mediaUrl: 'https://github.com/mrunqiuehacker'
+                }
             }
+        }, { quoted: m })
 
-            // Alternative menu with image
-            case 'allmenu':
-            case 'fullmenu': {
-                let fullMenuText = `╔══════════════════════╗\n`
-                fullMenuText += `║    🐞 LADYBUG BOT 🐞    ║\n`
-                fullMenuText += `╚══════════════════════╝\n\n`
-                
-                fullMenuText += `👋 *Hello ${pushname}!*\n`
-                fullMenuText += `🤖 *Bot Name:* ${global.botname}\n`
-                fullMenuText += `📅 *Date:* ${new Date().toLocaleDateString()}\n`
-                fullMenuText += `⏰ *Time:* ${new Date().toLocaleTimeString()}\n`
-                fullMenuText += `⏱️ *Runtime:* ${runtime(process.uptime())}\n\n`
-                
-                fullMenuText += `╭─「 🎵 YOUTUBE DOWNLOADER 」\n`
-                fullMenuText += `│ ${prefix}yts <query>\n`
-                fullMenuText += `│ ${prefix}play <song>\n`
-                fullMenuText += `│ ${prefix}song <title>\n`
-                fullMenuText += `│ ${prefix}video <title>\n`
-                fullMenuText += `│ ${prefix}ytmp4 <title>\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 🎌 ANIME & IMAGES 」\n`
-                fullMenuText += `│ ${prefix}anime waifu\n`
-                fullMenuText += `│ ${prefix}anime neko\n`
-                fullMenuText += `│ ${prefix}anime maid\n`
-                fullMenuText += `│ ${prefix}waifu\n`
-                fullMenuText += `│ ${prefix}neko\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 🔞 NSFW (Admin Only) 」\n`
-                fullMenuText += `│ ${prefix}nsfw waifu\n`
-                fullMenuText += `│ ${prefix}nsfw neko\n`
-                fullMenuText += `│ ${prefix}nsfw trap\n`
-                fullMenuText += `│ ${prefix}nsfw blowjob\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 🎮 FUN & GAMES 」\n`
-                fullMenuText += `│ ${prefix}joke\n`
-                fullMenuText += `│ ${prefix}quote\n`
-                fullMenuText += `│ ${prefix}fact\n`
-                fullMenuText += `│ ${prefix}meme\n`
-                fullMenuText += `│ ${prefix}truth\n`
-                fullMenuText += `│ ${prefix}dare\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 🛠️ UTILITIES 」\n`
-                fullMenuText += `│ ${prefix}weather <city>\n`
-                fullMenuText += `│ ${prefix}translate <text>\n`
-                fullMenuText += `│ ${prefix}qr <text>\n`
-                fullMenuText += `│ ${prefix}shorturl <url>\n`
-                fullMenuText += `│ ${prefix}calculator <math>\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 ⚙️ GENERAL 」\n`
-                fullMenuText += `│ ${prefix}ping\n`
-                fullMenuText += `│ ${prefix}runtime\n`
-                fullMenuText += `│ ${prefix}owner\n`
-                fullMenuText += `│ ${prefix}script\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `╭─「 👑 OWNER ONLY 」\n`
-                fullMenuText += `│ ${prefix}restart\n`
-                fullMenuText += `│ ${prefix}eval <code>\n`
-                fullMenuText += `│ ${prefix}exec <cmd>\n`
-                fullMenuText += `│ ${prefix}broadcast <text>\n`
-                fullMenuText += `╰────────────────────\n\n`
-                
-                fullMenuText += `┌─────────────────────┐\n`
-                fullMenuText += `│ 💻 Developer: MR NTANDO OFC\n`
-                fullMenuText += `│ 🌐 GitHub: mrnta-source\n`
-                fullMenuText += `│ 📺 YouTube: MR NTANDO OFC\n`
-                fullMenuText += `│ 🐞 Version: Ladybug 5.0\n`
-                fullMenuText += `└─────────────────────┘`
+    } catch (error) {
+        console.error('Menu command error:', error)
+        
+        // Fallback simple menu
+        const simpleMenu = `🐞 *KNIGHT BOT MENU*\n\n` +
+                          `📋 *Available Commands:*\n` +
+                          `• .ping - Check speed\n` +
+                          `• .menu - Show menu\n` +
+                          `• .owner - Owner info\n` +
+                          `• .play <song> - Download music\n` +
+                          `• .anime <type> - Anime pics\n\n` +
+                          `⚡ Bot is running smoothly!\n` +
+                          `💻 Developer: MR UNIQUE HACKER`
 
-                await XeonBotInc.sendMessage(m.chat, {
-                    image: { url: 'https://i.imgur.com/your-full-menu-image.jpg' }, // Replace with your image
-                    caption: fullMenuText,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `🐞 ${global.botname} Full Menu`,
-                            body: `Complete command list for ${pushname}`,
-                            thumbnailUrl: 'https://i.imgur.com/your-thumbnail.jpg',
-                            sourceUrl: 'https://github.com/mrnta-source',
-                            mediaType: 1,
-                            mediaUrl: 'https://github.com/mrnta-source'
-                        }
-                    }
-                }, { quoted: m })
-                break
-            }
+        await XeonBotInc.sendMessage(m.chat, {
+            text: simpleMenu
+        }, { quoted: m })
+    }
+    break
+}
 
+            
             // Simple menu without audio
             case 'list':
             case 'commands': {
