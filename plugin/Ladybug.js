@@ -627,24 +627,29 @@ break;
 
 case 'yts': 
 case 'ytsearch': {
-    if (!text) return reply(`❌ Please provide a search term.\n\n*Example:* ${currentPrefix + command} Imagine Dragons`);
+    if (!text) return await reply(`❌ *Please provide a search term*\n\n*Example:* ${prefix + command} Imagine Dragons Believer`);
     
     try {
         // Send loading message
-        const loadingMsg = await reply('🔍 Searching YouTube...');
-        
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { 
+            text: '🔍 *Searching YouTube...*\n⏳ Please wait...' 
+        }, { quoted: m });
+
         let yts = require("yt-search");
         let search = await yts(text);
         let videos = search.all;
 
         if (!videos || videos.length === 0) {
-            return reply('❌ No videos found for your search.');
+            return await XeonBotInc.sendMessage(m.chat, { 
+                text: '❌ *No videos found*\n\nTry searching with different keywords.',
+                edit: loadingMsg.key 
+            });
         }
 
         // Prepare the combined message for up to 8 videos
         let message = `🎵 *YOUTUBE SEARCH RESULTS*\n\n`;
         message += `🔍 *Query:* ${text}\n`;
-        message += `📊 *Results:* ${videos.length} videos found\n\n`;
+        message += `📊 *Found:* ${videos.length} results\n\n`;
         
         const numVideos = Math.min(videos.length, 8);
 
@@ -653,22 +658,32 @@ case 'ytsearch': {
             const number = i + 1;
             
             message += `*${number}.* 📹 ${video.title}\n`;
-            message += `⏱️ Duration: ${video.timestamp}\n`;
-            message += `👀 Views: ${video.views.toLocaleString()}\n`;
-            message += `👤 Channel: ${video.author.name}\n`;
-            message += `📅 Uploaded: ${video.ago}\n`;
-            message += `🔗 ${video.url}\n\n`;
+            message += `⏱️ *Duration:* ${video.timestamp} (${video.seconds}s)\n`;
+            message += `👀 *Views:* ${video.views.toLocaleString()}\n`;
+            message += `👤 *Channel:* ${video.author.name}\n`;
+            message += `📅 *Uploaded:* ${video.ago}\n`;
+            
+            // Add description if available (truncated)
+            if (video.description && video.description.length > 0) {
+                const shortDesc = video.description.length > 100 ? 
+                    video.description.substring(0, 100) + '...' : video.description;
+                message += `📝 *Description:* ${shortDesc}\n`;
+            }
+            
+            message += `🔗 *URL:* ${video.url}\n\n`;
         }
 
-        message += `💡 *Tip:* Use ${currentPrefix}play <song name> to download audio\n`;
-        message += `🐞 *Powered by Ladybug Search*`;
+        message += `💡 *Tip:* Use ${prefix}play <song name> to download\n`;
+        message += `🎧 *Powered by ${botname}*`;
 
+        // Send with thumbnail image
         await XeonBotInc.sendMessage(m.chat, {
-            text: message,
+            image: { url: videos[0].thumbnail },
+            caption: message,
             contextInfo: {
                 externalAdReply: {
-                    title: `🎵 YouTube Search: ${text}`,
-                    body: `Found ${numVideos} results`,
+                    title: `🎵 Search: ${text}`,
+                    body: `Found ${numVideos} results • ${botname}`,
                     thumbnailUrl: videos[0].thumbnail || 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
                     sourceUrl: videos[0].url,
                     mediaType: 1
@@ -678,73 +693,81 @@ case 'ytsearch': {
 
     } catch (error) {
         console.error('YouTube search error:', error);
-        reply('❌ Error occurred while searching YouTube. Please try again later.');
+        await reply('❌ *Search failed*\n\nPlease try again later.');
     }
 }
 break;
 
 case 'play': {
     try {
-        // Check if user is premium or owner
-        const isPremiumUser = premium.includes(m.sender) || owner.includes(m.sender) || m.sender === botNumber;
-        
-        if (!isPremiumUser) {
-            return reply(`🔒 *PREMIUM FEATURE*\n\n` +
-                        `This is a premium feature. Upgrade to premium to access:\n` +
-                        `• High-quality music downloads\n` +
-                        `• Multiple format options\n` +
-                        `• Fast download speeds\n` +
-                        `• No download limits\n\n` +
-                        `💎 Contact owner to get premium access!\n` +
-                        `📞 ${currentPrefix}owner`);
-        }
-
         if (!text) {
-            return reply(`🎵 *PREMIUM MUSIC DOWNLOADER*\n\n` +
-                        `Please provide a song name or YouTube URL.\n\n` +
-                        `*Examples:*\n` +
-                        `• ${currentPrefix}play Imagine Dragons Believer\n` +
-                        `• ${currentPrefix}play https://youtube.com/watch?v=...\n\n` +
-                        `💎 *Premium Features:*\n` +
-                        `• Multiple quality options\n` +
-                        `• Fast downloads\n` +
-                        `• High-quality audio`);
+            return await reply(`🎵 *MUSIC DOWNLOADER*\n\n` +
+                              `Please provide a song name or YouTube URL.\n\n` +
+                              `*Examples:*\n` +
+                              `• ${prefix}play Imagine Dragons Believer\n` +
+                              `• ${prefix}play https://youtube.com/watch?v=...\n\n` +
+                              `🎧 *Features:*\n` +
+                              `• Multiple quality options\n` +
+                              `• Audio & Video formats\n` +
+                              `• Fast downloads\n` +
+                              `• Song thumbnails & descriptions`);
         }
 
-        // Send loading message
-        await reply('🎵 *PREMIUM DOWNLOADER ACTIVE*\n\n' +
-                   '🔍 Searching for your song...\n' +
-                   '⏳ Please wait while we prepare your download...');
+        // Send initial loading message
+        const loadingMsg = await XeonBotInc.sendMessage(m.chat, { 
+            text: '🎵 *MUSIC DOWNLOADER*\n\n🔍 Searching for your song...\n⏳ Please wait...' 
+        }, { quoted: m });
 
         const yts = require("yt-search");
 
         let search = await yts(text);
         if (!search.all || search.all.length === 0) {
-            return reply('❌ No songs found for your search.');
+            return await XeonBotInc.sendMessage(m.chat, { 
+                text: '❌ *No songs found*\n\nPlease try with different keywords.',
+                edit: loadingMsg.key 
+            });
         }
 
         let video = search.all[0];
         let link = video.url;
 
-        // Quality selection message
-        const qualityMsg = `🎵 *SONG FOUND*\n\n` +
-                          `📹 *Title:* ${video.title}\n` +
-                          `👤 *Channel:* ${video.author.name}\n` +
-                          `⏱️ *Duration:* ${video.timestamp}\n` +
-                          `👀 *Views:* ${video.views.toLocaleString()}\n\n` +
-                          `🎧 *SELECT AUDIO QUALITY:*\n\n` +
-                          `1️⃣ *High Quality* (320kbps) - ~${Math.round(video.seconds * 0.04)}MB\n` +
-                          `2️⃣ *Medium Quality* (192kbps) - ~${Math.round(video.seconds * 0.024)}MB\n` +
-                          `3️⃣ *Low Quality* (128kbps) - ~${Math.round(video.seconds * 0.016)}MB\n\n` +
-                          `💡 Reply with *1*, *2*, or *3* to select quality\n` +
-                          `⏰ Selection expires in 30 seconds`;
+        // Create detailed song info with description
+        let songDescription = '';
+        if (video.description && video.description.length > 0) {
+            songDescription = video.description.length > 200 ? 
+                video.description.substring(0, 200) + '...' : video.description;
+        } else {
+            songDescription = 'No description available';
+        }
 
+        // Format selection message with song image and description
+        const formatMsg = `🎵 *SONG FOUND*\n\n` +
+                         `📹 *Title:* ${video.title}\n` +
+                         `👤 *Channel:* ${video.author.name}\n` +
+                         `⏱️ *Duration:* ${video.timestamp}\n` +
+                         `👀 *Views:* ${video.views.toLocaleString()}\n` +
+                         `📅 *Uploaded:* ${video.ago}\n\n` +
+                         `📝 *Description:*\n${songDescription}\n\n` +
+                         `📥 *SELECT DOWNLOAD FORMAT:*\n\n` +
+                         `🎵 *AUDIO FORMATS:*\n` +
+                         `1️⃣ MP3 High (320kbps) - ~${Math.round(video.seconds * 0.04)}MB\n` +
+                         `2️⃣ MP3 Medium (192kbps) - ~${Math.round(video.seconds * 0.024)}MB\n` +
+                         `3️⃣ MP3 Low (128kbps) - ~${Math.round(video.seconds * 0.016)}MB\n\n` +
+                         `🎬 *VIDEO FORMATS:*\n` +
+                         `4️⃣ MP4 720p - ~${Math.round(video.seconds * 0.8)}MB\n` +
+                         `5️⃣ MP4 480p - ~${Math.round(video.seconds * 0.5)}MB\n` +
+                         `6️⃣ MP4 360p - ~${Math.round(video.seconds * 0.3)}MB\n\n` +
+                         `💡 Reply with *1-6* to select format\n` +
+                         `⏰ Auto-select MP3 Medium in 25 seconds`;
+
+        // Send song image with format selection
         await XeonBotInc.sendMessage(m.chat, {
-            text: qualityMsg,
+            image: { url: video.thumbnail },
+            caption: formatMsg,
             contextInfo: {
                 externalAdReply: {
                     title: `🎵 ${video.title}`,
-                    body: `Premium Music Downloader`,
+                    body: `Select format • ${botname}`,
                     thumbnailUrl: video.thumbnail,
                     sourceUrl: video.url,
                     mediaType: 1
@@ -752,95 +775,202 @@ case 'play': {
             }
         }, { quoted: m });
 
-        // Wait for user quality selection with a simpler approach
-        let qualityChoice = '2'; // Default to medium quality
+        // Format selection logic
+        let formatChoice = '2'; // Default to MP3 Medium
+        let selectionMade = false;
         
-        // Set up a temporary listener for quality selection
-        const qualityListener = async (update) => {
-            const { messages } = update;
-            if (!messages || messages.length === 0) return;
-            
-            const msg = messages[0];
-            if (msg.key.remoteJid === m.chat && 
-                msg.key.participant === m.sender &&
-                msg.message) {
+        const formatListener = (update) => {
+            try {
+                const { messages } = update;
+                if (!messages || messages.length === 0 || selectionMade) return;
                 
-                const userInput = msg.message.conversation || 
-                                msg.message.extendedTextMessage?.text || '';
-                
-                if (['1', '2', '3'].includes(userInput.trim())) {
-                    qualityChoice = userInput.trim();
-                    XeonBotInc.ev.off('messages.upsert', qualityListener);
+                const msg = messages[0];
+                if (msg.key.remoteJid === m.chat && 
+                    msg.key.participant === m.sender) {
+                    
+                    const userInput = msg.message?.conversation || 
+                                    msg.message?.extendedTextMessage?.text || '';
+                    
+                    if (['1', '2', '3', '4', '5', '6'].includes(userInput.trim())) {
+                        formatChoice = userInput.trim();
+                        selectionMade = true;
+                        XeonBotInc.ev.off('messages.upsert', formatListener);
+                    }
                 }
+            } catch (err) {
+                console.log('Format listener error:', err);
             }
         };
 
-        XeonBotInc.ev.on('messages.upsert', qualityListener);
+        XeonBotInc.ev.on('messages.upsert', formatListener);
 
-        // Wait 15 seconds for user input
-        await new Promise(resolve => setTimeout(resolve, 15000));
-        XeonBotInc.ev.off('messages.upsert', qualityListener);
+        // Wait for selection or timeout
+        setTimeout(() => {
+            if (!selectionMade) {
+                XeonBotInc.ev.off('messages.upsert', formatListener);
+            }
+        }, 25000);
 
-        // Quality settings
-        const qualitySettings = {
-            '1': { bitrate: '320kbps', quality: 'High', size: 'Large' },
-            '2': { bitrate: '192kbps', quality: 'Medium', size: 'Medium' },
-            '3': { bitrate: '128kbps', quality: 'Low', size: 'Small' }
+        await new Promise(resolve => setTimeout(resolve, 25000));
+
+        // Format settings
+        const formatSettings = {
+            '1': { type: 'audio', quality: 'High', bitrate: '320kbps', format: 'mp3', size: 'Large' },
+            '2': { type: 'audio', quality: 'Medium', bitrate: '192kbps', format: 'mp3', size: 'Medium' },
+            '3': { type: 'audio', quality: 'Low', bitrate: '128kbps', format: 'mp3', size: 'Small' },
+            '4': { type: 'video', quality: '720p', bitrate: 'HD', format: 'mp4', size: 'Large' },
+            '5': { type: 'video', quality: '480p', bitrate: 'SD', format: 'mp4', size: 'Medium' },
+            '6': { type: 'video', quality: '360p', bitrate: 'Low', format: 'mp4', size: 'Small' }
         };
 
-        const selectedQuality = qualitySettings[qualityChoice] || qualitySettings['2'];
+        const selectedFormat = formatSettings[formatChoice] || formatSettings['2'];
+        const isAudio = selectedFormat.type === 'audio';
 
-        await reply(`🎧 *DOWNLOADING...*\n\n` +
-                   `📹 *Song:* ${video.title}\n` +
-                   `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
-                   `📦 *Size:* ${selectedQuality.size}\n` +
-                   `⏳ *Status:* Processing...\n\n` +
-                   `💎 *Premium Download in Progress*`);
+        // Update with download status and song image
+        const downloadMsg = `🎧 *DOWNLOADING...*\n\n` +
+                           `📹 *Song:* ${video.title}\n` +
+                           `👤 *Artist:* ${video.author.name}\n` +
+                           `📁 *Format:* ${selectedFormat.format.toUpperCase()}\n` +
+                           `🎚️ *Quality:* ${selectedFormat.quality} (${selectedFormat.bitrate})\n` +
+                           `📦 *Size:* ${selectedFormat.size}\n` +
+                           `⏱️ *Duration:* ${video.timestamp}\n` +
+                           `⏳ *Status:* Processing...\n\n` +
+                           `🎵 *Download in Progress*`;
 
-        // Premium API endpoints for high-quality downloads
-        const premiumApis = [
+        await XeonBotInc.sendMessage(m.chat, {
+            image: { url: video.thumbnail },
+            caption: downloadMsg
+        }, { quoted: m });
+
+        // API endpoints
+        const audioApis = [
             `https://api.ryzendesu.vip/api/downloader/ytmp3?url=${encodeURIComponent(link)}`,
             `https://apis.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(link)}`,
             `https://api.dreaded.site/api/ytdl/audio?url=${encodeURIComponent(link)}`,
             `https://xploader-api.vercel.app/ytmp3?url=${encodeURIComponent(link)}`
         ];
 
+        const videoApis = [
+            `https://api.ryzendesu.vip/api/downloader/ytmp4?url=${encodeURIComponent(link)}`,
+            `https://apis.davidcyriltech.my.id/youtube/mp4?url=${encodeURIComponent(link)}`,
+            `https://api.dreaded.site/api/ytdl/video?url=${encodeURIComponent(link)}`,
+            `https://xploader-api.vercel.app/ytmp4?url=${encodeURIComponent(link)}`
+        ];
+
+        const apis = isAudio ? audioApis : videoApis;
         let downloadSuccess = false;
 
-        for (const api of premiumApis) {
+        for (const api of apis) {
             try {
-                console.log(`Trying API: ${api}`);
-                let response = await fetch(api);
-                let data = await response.json();
+                console.log(`Trying ${isAudio ? 'audio' : 'video'} API: ${api}`);
                 
-                console.log(`API Response:`, data);
-
-                // Check for different response formats
-                let audioUrl = null;
-                if (data.status === 200 || data.success) {
-                    audioUrl = data.result?.downloadUrl || 
-                              data.result?.download || 
-                              data.url || 
-                              data.download ||
-                              data.result;
-                } else if (data.downloadUrl) {
-                    audioUrl = data.downloadUrl;
-                } else if (typeof data.result === 'string') {
-                    audioUrl = data.result;
+                const response = await fetch(api, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.log(`API ${api} returned status: ${response.status}`);
+                    continue;
                 }
                 
-                if (audioUrl && typeof audioUrl === 'string' && audioUrl.startsWith('http')) {
-                    console.log(`Found audio URL: ${audioUrl}`);
+                const data = await response.json();
+                console.log(`API Response:`, data);
+
+                // Extract download URL
+                let downloadUrl = null;
+                
+                if (data.status === 200 || data.success === true) {
+                    downloadUrl = data.result?.downloadUrl || 
+                                 data.result?.download || 
+                                 data.result?.url ||
+                                 data.url || 
+                                 data.download ||
+                                 (typeof data.result === 'string' ? data.result : null);
+                } else if (data.downloadUrl) {
+                    downloadUrl = data.downloadUrl;
+                } else if (data.result && typeof data.result === 'string') {
+                    downloadUrl = data.result;
+                }
+                
+                if (downloadUrl && typeof downloadUrl === 'string' && 
+                    (downloadUrl.startsWith('http') || downloadUrl.startsWith('https'))) {
                     
-                    // Send as audio message
+                    console.log(`Valid download URL found: ${downloadUrl}`);
+                    
+                    // Test URL accessibility
+                    try {
+                        const testResponse = await fetch(downloadUrl, { method: 'HEAD' });
+                        if (!testResponse.ok) {
+                            console.log(`Download URL not accessible: ${testResponse.status}`);
+                            continue;
+                        }
+                    } catch (testError) {
+                        console.log(`URL test failed:`, testError.message);
+                        continue;
+                    }
+                    
+                    const fileName = `${video.title.replace(/[^\w\s]/gi, '')}.${selectedFormat.format}`;
+                    const mimetype = isAudio ? 'audio/mpeg' : 'video/mp4';
+                    
+                    // Send as media message with thumbnail
+                    if (isAudio) {
+                        await XeonBotInc.sendMessage(m.chat, {
+                            audio: { url: downloadUrl },
+                            mimetype: 'audio/mpeg',
+                            fileName: fileName,
+                            contextInfo: {
+                                externalAdReply: {
+                                    title: video.title,
+                                    body: `${selectedFormat.quality} Quality • ${video.author.name}`,
+                                    thumbnailUrl: video.thumbnail,
+                                    sourceUrl: video.url,
+                                    mediaType: 1
+                                }
+                            }
+                        }, { quoted: m });
+                    } else {
+                        await XeonBotInc.sendMessage(m.chat, {
+                            video: { url: downloadUrl },
+                            mimetype: 'video/mp4',
+                            fileName: fileName,
+                            caption: `🎬 *${video.title}*\n\n📹 Quality: ${selectedFormat.quality}\n👤 Channel: ${video.author.name}\n\n📝 *Description:*\n${songDescription}`,
+                            contextInfo: {
+                                externalAdReply: {
+                                    title: video.title,
+                                    body: `${selectedFormat.quality} Quality • ${video.author.name}`,
+                                    thumbnailUrl: video.thumbnail,
+                                    sourceUrl: video.url,
+                                    mediaType: 1
+                                }
+                            }
+                        }, { quoted: m });
+                    }
+
+                    // Send as document with detailed info
+                    const documentCaption = `${isAudio ? '🎵' : '🎬'} *DOWNLOAD COMPLETE*\n\n` +
+                                          `📹 *Title:* ${video.title}\n` +
+                                          `👤 *Channel:* ${video.author.name}\n` +
+                                          `📁 *Format:* ${selectedFormat.format.toUpperCase()}\n` +
+                                          `🎚️ *Quality:* ${selectedFormat.quality} (${selectedFormat.bitrate})\n` +
+                                          `⏱️ *Duration:* ${video.timestamp}\n` +
+                                          `👀 *Views:* ${video.views.toLocaleString()}\n` +
+                                          `📅 *Uploaded:* ${video.ago}\n\n` +
+                                          `📝 *Description:*\n${songDescription}\n\n` +
+                                          `🎧 *Downloaded by ${botname}*\n` +
+                                          `🐞 *Enjoy your ${isAudio ? 'music' : 'video'}!*`;
+
                     await XeonBotInc.sendMessage(m.chat, {
-                        audio: { url: audioUrl },
-                        mimetype: 'audio/mpeg',
-                        fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
+                        document: { url: downloadUrl },
+                        mimetype: mimetype,
+                        fileName: fileName,
+                        caption: documentCaption,
                         contextInfo: {
                             externalAdReply: {
                                 title: video.title,
-                                body: `${selectedQuality.quality} Quality • ${video.author.name}`,
+                                body: `${selectedFormat.quality} • ${video.author.name}`,
                                 thumbnailUrl: video.thumbnail,
                                 sourceUrl: video.url,
                                 mediaType: 1
@@ -848,18 +978,16 @@ case 'play': {
                         }
                     }, { quoted: m });
 
-                    // Send as document for download
+                    // Send success message with song image
                     await XeonBotInc.sendMessage(m.chat, {
-                        document: { url: audioUrl },
-                        mimetype: 'audio/mpeg',
-                        fileName: `${video.title.replace(/[^\w\s]/gi, '')}.mp3`,
-                        caption: `🎵 *PREMIUM DOWNLOAD COMPLETE*\n\n` +
-                                `📹 *Title:* ${video.title}\n` +
-                                `👤 *Artist:* ${video.author.name}\n` +
-                                `🎚️ *Quality:* ${selectedQuality.quality} (${selectedQuality.bitrate})\n` +
-                                `⏱️ *Duration:* ${video.timestamp}\n\n` +
-                                `💎 *Downloaded via Ladybug Premium*\n` +
-                                `🐞 *Enjoy your music!*`
+                        image: { url: video.thumbnail },
+                        caption: `✅ *DOWNLOAD SUCCESSFUL*\n\n` +
+                                `🎵 *${video.title}*\n` +
+                                `👤 *By:* ${video.author.name}\n` +
+                                `📁 *Format:* ${selectedFormat.format.toUpperCase()}\n` +
+                                `🎚️ *Quality:* ${selectedFormat.quality}\n\n` +
+                                `🎧 *Enjoy your ${isAudio ? 'music' : 'video'}!*\n` +
+                                `🐞 *Downloaded via ${botname}*`
                     }, { quoted: m });
 
                     downloadSuccess = true;
@@ -872,25 +1000,29 @@ case 'play': {
         }
 
         if (!downloadSuccess) {
-            return reply(`❌ *DOWNLOAD FAILED*\n\n` +
-                        `Unable to download the requested song.\n` +
-                        `This might be due to:\n` +
+            await XeonBotInc.sendMessage(m.chat, {
+                image: { url: video.thumbnail },
+                caption: `❌ *DOWNLOAD FAILED*\n\n` +
+                        `🎵 *Song:* ${video.title}\n` +
+                        `👤 *Channel:* ${video.author.name}\n\n` +
+                        `Unable to download the requested ${isAudio ? 'audio' : 'video'}.\n\n` +
+                        `*Possible reasons:*\n` +
                         `• Copyright restrictions\n` +
                         `• Server issues\n` +
-                        `• Invalid URL\n\n` +
-                        `🔄 Please try again with a different song.`);
+                        `• Invalid URL\n` +
+                        `• API limitations\n\n` +
+                        `🔄 Please try again later or with a different song.`
+            }, { quoted: m });
         }
 
     } catch (error) {
-        console.error('Premium play error:', error);
-        reply(`❌ *PREMIUM DOWNLOAD ERROR*\n\n` +
-              `An error occurred during download.\n` +
-              `Please try again or contact support.\n\n` +
-              `Error: ${error.message}`);
+        console.error('Play command error:', error);
+        await reply(`❌ *DOWNLOAD ERROR*\n\n` +
+                   `An error occurred: ${error.message}\n\n` +
+                   `🔄 Please try again later.`);
     }
 }
 break;
-
 
             case 'anime':
             case 'waifu': {
