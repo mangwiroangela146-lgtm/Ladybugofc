@@ -430,7 +430,7 @@ case 'help': {
                 'diamond_white': 'https://www.soundjay.com/misc/sounds/chime-02.wav'
             };
             
-            return audioUrls[style] || 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
+            return audioUrls[style] || 'https://files.catbox.moe/u9c4oq.mp3';
         }
 
         // Get all cases and categorize them
