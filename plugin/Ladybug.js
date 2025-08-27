@@ -449,7 +449,7 @@ case 'help': {
                 externalAdReply: {
                     title: `🐞 ${botname} - ${dailyStyle.toUpperCase().replace('_', ' ')} Menu`,
                     body: `Total: ${Object.values(categories).flat().length} Commands | Style changes daily!`,
-                    thumbnailUrl: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    thumbnailUrl: 'https://files.catbox.moe/gq6xzb.jpeg',
                     sourceUrl: 'https://github.com/mrnta-source',
                     mediaType: 1,
                     renderLargerThumbnail: true
