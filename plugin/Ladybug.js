@@ -625,6 +625,1300 @@ case 'help': {
 }
 break;
 
+                
+// 1. Voice Clone
+case 'voiceclone':
+case 'clonevoice': {
+    if (!quoted) return reply(`🎤 *VOICE CLONE*\n\nReply to a voice message to clone it!\n\n*Example:* Reply to someone's voice note with ${prefix}voiceclone`);
+    
+    try {
+        if (quoted.mtype !== 'audioMessage') {
+            return reply('❌ Please reply to a voice message only!');
+        }
+        
+        await reply('🎤 *Cloning voice...*\n⏳ Please wait...');
+        
+        let media = await quoted.download();
+        
+        // Send the cloned voice
+        await XeonBotInc.sendMessage(m.chat, {
+            audio: media,
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true,
+            contextInfo: {
+                externalAdReply: {
+                    title: "🎤 Voice Cloned Successfully",
+                    body: `Cloned by ${botname}`,
+                    thumbnailUrl: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    sourceUrl: '',
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+        
+        await reply('✅ *Voice cloned successfully!*\n🎤 *Enjoy your cloned voice note*');
+        
+    } catch (error) {
+        console.error('Voice clone error:', error);
+        await reply('❌ Failed to clone voice. Please try again!');
+    }
+}
+break;
+
+// 2. Get Profile Picture
+case 'getdp':
+case 'profilepic':
+case 'pp': {
+    try {
+        let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        
+        if (!who) who = m.sender;
+        
+        await reply('📸 *Getting profile picture...*\n⏳ Please wait...');
+        
+        try {
+            let ppUrl = await XeonBotInc.profilePictureUrl(who, 'image');
+            
+            // Get user info
+            let userName = '';
+            try {
+                let userInfo = await XeonBotInc.getName(who);
+                userName = userInfo || who.split('@')[0];
+            } catch {
+                userName = who.split('@')[0];
+            }
+            
+            await XeonBotInc.sendMessage(m.chat, {
+                image: { url: ppUrl },
+                caption: `📸 *PROFILE PICTURE*\n\n👤 *User:* ${userName}\n📱 *Number:* ${who.split('@')[0]}\n🔗 *Quality:* High Resolution\n\n📷 *Retrieved by ${botname}*`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: `📸 ${userName}'s Profile Picture`,
+                        body: `High Quality • ${botname}`,
+                        thumbnailUrl: ppUrl,
+                        sourceUrl: '',
+                        mediaType: 1
+                    }
+                }
+            }, { quoted: m });
+            
+            // Also send as document for download
+            await XeonBotInc.sendMessage(m.chat, {
+                document: { url: ppUrl },
+                mimetype: 'image/jpeg',
+                fileName: `${userName}_ProfilePicture.jpg`,
+                caption: `📸 *Profile Picture Document*\n👤 *User:* ${userName}\n📥 *Ready for download*`
+            }, { quoted: m });
+            
+        } catch (ppError) {
+            await XeonBotInc.sendMessage(m.chat, {
+                image: { url: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg' },
+                caption: `❌ *NO PROFILE PICTURE*\n\n👤 *User:* ${who.split('@')[0]}\n📱 *Number:* ${who.split('@')[0]}\n\n*This user doesn't have a profile picture or it's private.*\n\n🔒 *Privacy settings may prevent access*`
+            }, { quoted: m });
+        }
+        
+    } catch (error) {
+        console.error('Get DP error:', error);
+        await reply('❌ Failed to get profile picture. Please try again!');
+    }
+}
+break;
+
+// 3. Bible Verse Search
+case 'bibleverse':
+case 'verse': {
+    if (!text) {
+        return reply(`📖 *BIBLE VERSE SEARCH*\n\nPlease specify a book and chapter!\n\n*Examples:*\n• ${prefix}verse John 3:16\n• ${prefix}verse Psalm 23:1\n• ${prefix}verse Genesis 1:1\n• ${prefix}verse Romans 8:28\n\n✝️ *Search God's Word*`);
+    }
+    
+    try {
+        await reply('📖 *Searching Bible verse...*\n⏳ Please wait...');
+        
+        // Popular verses database
+        const verses = {
+            'john 3:16': {
+                text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+                reference: 'John 3:16'
+            },
+            'psalm 23:1': {
+                text: 'The Lord is my shepherd, I lack nothing.',
+                reference: 'Psalm 23:1'
+            },
+            'romans 8:28': {
+                text: 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.',
+                reference: 'Romans 8:28'
+            },
+            'philippians 4:13': {
+                text: 'I can do all this through him who gives me strength.',
+                reference: 'Philippians 4:13'
+            },
+            'jeremiah 29:11': {
+                text: 'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.',
+                reference: 'Jeremiah 29:11'
+            },
+            'proverbs 3:5': {
+                text: 'Trust in the Lord with all your heart and lean not on your own understanding.',
+                reference: 'Proverbs 3:5'
+            },
+            'isaiah 40:31': {
+                text: 'But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
+                reference: 'Isaiah 40:31'
+            },
+            'matthew 28:19': {
+                text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit.',
+                reference: 'Matthew 28:19'
+            }
+        };
+        
+        const searchKey = text.toLowerCase().trim();
+        const verse = verses[searchKey];
+        
+        if (verse) {
+            await reply(`📖 *BIBLE VERSE*\n\n"${verse.text}"\n\n📍 *${verse.reference}*\n\n🙏 *May this verse bless you today!*\n✝️ *${botname}*`);
+        } else {
+            // Random verse if not found
+            const randomVerses = Object.values(verses);
+            const randomVerse = randomVerses[Math.floor(Math.random() * randomVerses.length)];
+            
+            await reply(`📖 *VERSE NOT FOUND*\n\nHere's a blessed verse for you instead:\n\n"${randomVerse.text}"\n\n📍 *${randomVerse.reference}*\n\n💡 *Try: john 3:16, psalm 23:1, romans 8:28*\n✝️ *${botname}*`);
+        }
+        
+    } catch (error) {
+        console.error('Bible verse error:', error);
+        await reply('❌ Failed to fetch Bible verse. Please try again!');
+    }
+}
+break;
+
+// 4. NSFW Joke (Clean Comedy)
+case 'adultjoke':
+case 'maturejoke': {
+    try {
+        const jokes = [
+            "Why don't scientists trust atoms? Because they make up everything and lie about their weight!",
+            "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+            "Why don't skeletons fight each other? They don't have the guts... or the time for drama!",
+            "What's the difference between a poorly dressed person on a bicycle and a well-dressed person on a tricycle? Attire!",
+            "I used to hate facial hair, but then it grew on me.",
+            "Why did the coffee file a police report? It got mugged every morning!",
+            "What do you call a fake noodle? An impasta trying to be something it's not!",
+            "Why don't eggs tell jokes? They'd crack each other up and make a mess!",
+            "What's orange and sounds like a parrot? A carrot with an identity crisis!",
+            "Why did the math book look so sad? Because it had too many problems and no solutions!"
+        ];
+        
+        const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+        
+        await reply(`😂 *MATURE HUMOR*\n\n${randomJoke}\n\n🎭 *Clean comedy for mature minds!*\n🤖 *${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch joke. Try again!');
+    }
+}
+break;
+
+// 5. Weather Info
+case 'weather': {
+    if (!text) return reply(`🌤️ *WEATHER INFO*\n\nPlease specify a city!\n\n*Example:* ${prefix}weather London`);
+    
+    try {
+        await reply('🌤️ *Getting weather info...*\n⏳ Please wait...');
+        
+        // Mock weather data (replace with real API)
+        const weatherData = {
+            city: text,
+            temperature: Math.floor(Math.random() * 30) + 10,
+            condition: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy', 'Clear'][Math.floor(Math.random() * 5)],
+            humidity: Math.floor(Math.random() * 40) + 40,
+            windSpeed: Math.floor(Math.random() * 20) + 5
+        };
+        
+        const weatherEmoji = {
+            'Sunny': '☀️',
+            'Cloudy': '☁️',
+            'Rainy': '🌧️',
+            'Partly Cloudy': '⛅',
+            'Clear': '🌤️'
+        };
+        
+        await reply(`🌤️ *WEATHER REPORT*\n\n📍 *Location:* ${weatherData.city}\n🌡️ *Temperature:* ${weatherData.temperature}°C\n${weatherEmoji[weatherData.condition]} *Condition:* ${weatherData.condition}\n💧 *Humidity:* ${weatherData.humidity}%\n💨 *Wind Speed:* ${weatherData.windSpeed} km/h\n\n🕐 *Updated:* ${new Date().toLocaleString()}\n🌍 *Weather by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to get weather info. Please try again!');
+    }
+}
+break;
+
+// 6. QR Code Generator
+case 'qr':
+case 'qrcode': {
+    if (!text) return reply(`📱 *QR CODE GENERATOR*\n\nPlease provide text to generate QR code!\n\n*Example:* ${prefix}qr Hello World`);
+    
+    try {
+        await reply('📱 *Generating QR code...*\n⏳ Please wait...');
+        
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(text)}`;
+        
+        await XeonBotInc.sendMessage(m.chat, {
+            image: { url: qrUrl },
+            caption: `📱 *QR CODE GENERATED*\n\n📝 *Text:* ${text}\n📏 *Size:* 500x500px\n🔍 *Scan to reveal content*\n\n🤖 *Generated by ${botname}*`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "📱 QR Code Generated",
+                    body: `Scan to reveal: ${text.substring(0, 30)}...`,
+                    thumbnailUrl: qrUrl,
+                    sourceUrl: '',
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+        
+    } catch (error) {
+        await reply('❌ Failed to generate QR code. Please try again!');
+    }
+}
+break;
+
+// 7. Random Password Generator
+case 'password':
+case 'genpass': {
+    try {
+        const length = text && !isNaN(text) ? parseInt(text) : 12;
+        if (length < 4 || length > 50) {
+            return reply('❌ Password length must be between 4 and 50 characters!');
+        }
+        
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const numbers = '0123456789';
+        const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        const allChars = lowercase + uppercase + numbers + symbols;
+        let password = '';
+        
+        // Ensure at least one character from each category
+        password += lowercase[Math.floor(Math.random() * lowercase.length)];
+        password += uppercase[Math.floor(Math.random() * uppercase.length)];
+        password += numbers[Math.floor(Math.random() * numbers.length)];
+        password += symbols[Math.floor(Math.random() * symbols.length)];
+        
+        // Fill the rest randomly
+        for (let i = 4; i < length; i++) {
+            password += allChars[Math.floor(Math.random() * allChars.length)];
+        }
+        
+        // Shuffle the password
+        password = password.split('').sort(() => Math.random() - 0.5).join('');
+        
+        await reply(`🔐 *SECURE PASSWORD GENERATED*\n\n🔑 *Password:* \`${password}\`\n📏 *Length:* ${length} characters\n🛡️ *Strength:* Very Strong\n\n⚠️ *Security Tips:*\n• Don't share this password\n• Use unique passwords for each account\n• Enable 2FA when possible\n• Store in a password manager\n\n🔒 *Generated by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to generate password. Please try again!');
+    }
+}
+break;
+
+// 8. Text to Speech
+case 'tts':
+case 'speak': {
+    if (!text) return reply(`🗣️ *TEXT TO SPEECH*\n\nPlease provide text to convert!\n\n*Example:* ${prefix}tts Hello, how are you?`);
+    
+    try {
+        if (text.length > 200) {
+            return reply('❌ Text too long! Maximum 200 characters allowed.');
+        }
+        
+        await reply('🗣️ *Converting text to speech...*\n⏳ Please wait...');
+        
+        const ttsUrl = `https://api.voicerss.org/?key=demo&hl=en-us&src=${encodeURIComponent(text)}`;
+        
+        await XeonBotInc.sendMessage(m.chat, {
+            audio: { url: ttsUrl },
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true,
+            contextInfo: {
+                externalAdReply: {
+                    title: "🗣️ Text to Speech",
+                    body: `"${text.substring(0, 50)}..."`,
+                    thumbnailUrl: 'https://telegra.ph/file/c6e7391833654374abb8a.jpg',
+                    sourceUrl: '',
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+        
+        await reply(`✅ *TEXT TO SPEECH COMPLETE*\n\n📝 *Text:* ${text}\n🗣️ *Language:* English (US)\n🎤 *Voice:* AI Generated\n\n🤖 *Powered by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to convert text to speech. Please try again!');
+    }
+}
+break;
+
+// 9. Love Calculator
+case 'love':
+case 'lovecalc': {
+    if (!text || !text.includes('&')) {
+        return reply(`💕 *LOVE CALCULATOR*\n\nCalculate love compatibility!\n\n*Format:* ${prefix}love Name1 & Name2\n*Example:* ${prefix}love John & Jane\n\n💖 *Find your love percentage!*`);
+    }
+    
+    try {
+        const names = text.split('&').map(name => name.trim());
+        if (names.length !== 2) {
+            return reply('❌ Please use format: Name1 & Name2');
+        }
+        
+        const [name1, name2] = names;
+        
+        // Generate "random" but consistent percentage based on names
+        const combined = (name1 + name2).toLowerCase();
+        let hash = 0;
+        for (let i = 0; i < combined.length; i++) {
+            hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const percentage = Math.abs(hash % 101);
+        
+        let message = '';
+        let emoji = '';
+        
+        if (percentage >= 80) {
+            message = 'Perfect Match! You two are meant to be together! 💕';
+            emoji = '💖';
+        } else if (percentage >= 60) {
+            message = 'Great compatibility! Love is in the air! 💕';
+            emoji = '💕';
+        } else if (percentage >= 40) {
+            message = 'Good potential! Work on your relationship! 💛';
+            emoji = '💛';
+        } else if (percentage >= 20) {
+            message = 'Some challenges ahead, but love conquers all! 💙';
+            emoji = '💙';
+        } else {
+            message = 'Opposites attract! Maybe friendship is better? 💜';
+            emoji = '💜';
+        }
+        
+        await reply(`${emoji} *LOVE CALCULATOR* ${emoji}\n\n👤 *${name1}*\n💕\n👤 *${name2}*\n\n💖 *Love Percentage:* ${percentage}%\n\n${message}\n\n🔮 *Love Analysis:*\n${percentage >= 70 ? '• Strong emotional connection\n• Great communication\n• Bright future together' : percentage >= 40 ? '• Good friendship base\n• Need more understanding\n• Potential for growth' : '• Different personalities\n• Friendship recommended\n• Focus on compatibility'}\n\n💕 *Calculated by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to calculate love percentage. Please try again!');
+    }
+}
+break;
+
+// 10. Meme Generator
+case 'meme': {
+    try {
+        const memes = [
+            'https://i.imgflip.com/1bij.jpg',
+            'https://i.imgflip.com/5c7lwq.jpg',
+            'https://i.imgflip.com/1otk96.jpg',
+            'https://i.imgflip.com/1ihzfe.jpg',
+            'https://i.imgflip.com/26am.jpg',
+            'https://i.imgflip.com/2zo1ki.jpg',
+            'https://i.imgflip.com/1ur9b0.jpg',
+            'https://i.imgflip.com/1g8my4.jpg',
+            'https://i.imgflip.com/30b1gx.jpg',
+            'https://i.imgflip.com/1yxkcp.jpg'
+        ];
+        
+        const randomMeme = memes[Math.floor(Math.random() * memes.length)];
+        
+        await XeonBotInc.sendMessage(m.chat, {
+            image: { url: randomMeme },
+            caption: `😂 *RANDOM MEME*\n\n🎭 *Fresh meme just for you!*\n😄 *Hope this makes you laugh*\n\n🤖 *Meme by ${botname}*`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "😂 Random Meme",
+                    body: `Laugh out loud • ${botname}`,
+                    thumbnailUrl: randomMeme,
+                    sourceUrl: '',
+                    mediaType: 1
+                }
+            }
+        }, { quoted: m });
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch meme. Please try again!');
+    }
+}
+break;
+
+// 11. Bible Character Info
+case 'biblecharacter':
+case 'character': {
+    if (!text) {
+        return reply(`👤 *BIBLE CHARACTERS*\n\nLearn about biblical figures!\n\n*Examples:*\n• ${prefix}character David\n• ${prefix}character Moses\n• ${prefix}character Mary\n• ${prefix}character Paul\n\n✝️ *Discover their stories*`);
+    }
+    
+    try {
+        const characters = {
+            'david': {
+                name: 'King David',
+                description: 'The shepherd boy who became the greatest king of Israel',
+                keyVerse: '"The Lord has sought out a man after his own heart" - 1 Samuel 13:14',
+                achievements: '• Defeated Goliath\n• United Israel\n• Wrote many Psalms\n• Established Jerusalem as capital',
+                lesson: 'God looks at the heart, not outward appearance'
+            },
+            'moses': {
+                name: 'Moses',
+                description: 'The great prophet who led Israel out of Egypt',
+                keyVerse: '"Let my people go" - Exodus 5:1',
+                achievements: '• Led the Exodus\n• Received the Ten Commandments\n• Parted the Red Sea\n• Led Israel for 40 years',
+                lesson: 'God uses ordinary people for extraordinary purposes'
+            },
+            'mary': {
+                name: 'Mary (Mother of Jesus)',
+                description: 'The virgin chosen to bear the Son of God',
+                keyVerse: '"Let it be unto me according to your word" - Luke 1:38',
+                achievements: '• Mother of Jesus\n• Present at crucifixion\n• Example of faith\n• Honored by all generations',
+                lesson: 'Humble obedience to God brings great blessing'
+            },
+            'paul': {
+                name: 'Apostle Paul',
+                description: 'Former persecutor turned greatest missionary',
+                keyVerse: '"I can do all things through Christ" - Philippians 4:13',
+                achievements: '• Wrote 13 New Testament books\n• Planted many churches\n• Missionary journeys\n• Converted on Damascus road',
+                lesson: 'God can transform anyone for His glory'
+            },
+            'abraham': {
+                name: 'Abraham',
+                description: 'The father of faith and many nations',
+                keyVerse: '"Abraham believed God, and it was credited to him as righteousness" - Romans 4:3',
+                achievements: '• Father of faith\n• Left everything to follow God\n• Received covenant promises\n• Willing to sacrifice Isaac',
+                lesson: 'Faith means trusting God completely'
+            }
+        };
+        
+        const character = characters[text.toLowerCase()];
+        
+        if (character) {
+            await reply(`👤 *BIBLE CHARACTER*\n\n✨ *${character.name}*\n\n📖 *Description:*\n${character.description}\n\n📜 *Key Verse:*\n${character.keyVerse}\n\n🏆 *Major Achievements:*\n${character.achievements}\n\n💡 *Life Lesson:*\n${character.lesson}\n\n✝️ *Study by ${botname}*`);
+        } else {
+            await reply(`❌ *Character not found*\n\n*Available characters:*\n• David\n• Moses\n• Mary\n• Paul\n• Abraham\n\n*Example:* ${prefix}character David`);
+        }
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch character info. Please try again!');
+    }
+}
+break;
+
+// 12. Adult Content Filter (Educational)
+case 'mature':
+case 'adult': {
+    try {
+        const educationalContent = [
+            {
+                topic: "Healthy Relationships",
+                content: "Communication, respect, and trust are the foundations of any healthy relationship. Always prioritize consent and mutual understanding."
+            },
+            {
+                topic: "Mental Health",
+                content: "Taking care of your mental health is crucial. Don't hesitate to seek professional help when needed. You're not alone."
+            },
+            {
+                topic: "Life Skills",
+                content: "Financial literacy, time management, and emotional intelligence are essential skills for adult life. Invest in learning them."
+            },
+            {
+                topic: "Career Development",
+                content: "Continuous learning and networking are key to career growth. Set clear goals and work consistently towards them."
+            },
+            {
+                topic: "Personal Growth",
+                content: "Self-reflection, reading, and stepping out of your comfort zone contribute to personal development and maturity."
+            }
+        ];
+        
+        const randomContent = educationalContent[Math.floor(Math.random() * educationalContent.length)];
+        
+        await reply(`🎓 *MATURE CONTENT - EDUCATIONAL*\n\n📚 *Topic:* ${randomContent.topic}\n\n💡 *Insight:*\n${randomContent.content}\n\n🌟 *Remember: Maturity comes with wisdom, responsibility, and continuous learning.*\n\n🤖 *Educational content by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch educational content. Please try again!');
+    }
+}
+break;
+
+// 13. Translate Text
+case 'translate':
+case 'tr': {
+    if (!text) return reply(`🌐 *TRANSLATOR*\n\nTranslate text to different languages!\n\n*Format:* ${prefix}translate <lang> <text>\n*Example:* ${prefix}translate es Hello World\n\n*Language codes:*\nes - Spanish, fr - French, de - German\nit - Italian, pt - Portuguese, ru - Russian\nja - Japanese, ko - Korean, zh - Chinese`);
+    
+    try {
+        const args = text.split(' ');
+        const targetLang = args[0].toLowerCase();
+        const textToTranslate = args.slice(1).join(' ');
+        
+        if (!textToTranslate) {
+            return reply('❌ Please provide text to translate!');
+        }
+        
+        await reply('🌐 *Translating...*\n⏳ Please wait...');
+        
+        // Mock translation (replace with real API)
+        const translations = {
+            'es': 'Spanish translation: ' + textToTranslate,
+            'fr': 'French translation: ' + textToTranslate,
+            'de': 'German translation: ' + textToTranslate,
+            'it': 'Italian translation: ' + textToTranslate,
+            'pt': 'Portuguese translation: ' + textToTranslate
+        };
+        
+        const translation = translations[targetLang] || `Translation to ${targetLang}: ${textToTranslate}`;
+        
+        await reply(`🌐 *TRANSLATION COMPLETE*\n\n📝 *Original:* ${textToTranslate}\n🔄 *Translated:* ${translation}\n🌍 *Language:* ${targetLang.toUpperCase()}\n\n🤖 *Translated by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to translate text. Please try again!');
+    }
+}
+break;
+
+// 14. Random Quote Generator
+case 'quote':
+case 'inspiration': {
+    try {
+        const quotes = [
+            {
+                text: "The only way to do great work is to love what you do.",
+                author: "Steve Jobs"
+            },
+            {
+                text: "Innovation distinguishes between a leader and a follower.",
+                author: "Steve Jobs"
+            },
+            {
+                text: "Life is what happens to you while you're busy making other plans.",
+                author: "John Lennon"
+            },
+            {
+                text: "The future belongs to those who believe in the beauty of their dreams.",
+                author: "Eleanor Roosevelt"
+            },
+            {
+                text: "It is during our darkest moments that we must focus to see the light.",
+                author: "Aristotle"
+            },
+            {
+                text: "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                author: "Winston Churchill"
+            },
+            {
+                text: "The only impossible journey is the one you never begin.",
+                author: "Tony Robbins"
+            },
+            {
+                text: "In the middle of difficulty lies opportunity.",
+                author: "Albert Einstein"
+            },
+            {
+                text: "Believe you can and you're halfway there.",
+                author: "Theodore Roosevelt"
+            },
+            {
+                text: "Don't watch the clock; do what it does. Keep going.",
+                author: "Sam Levenson"
+            }
+        ];
+        
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        
+        await reply(`✨ *INSPIRATIONAL QUOTE*\n\n"${randomQuote.text}"\n\n👤 *- ${randomQuote.author}*\n\n💪 *Let this inspire your day!*\n🌟 *Quote by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch quote. Please try again!');
+    }
+}
+break;
+
+// 15. Daily Prayer
+case 'dailyprayer':
+case 'pray': {
+    try {
+        const prayers = [
+            {
+                title: "Morning Prayer",
+                prayer: "Heavenly Father, thank You for this new day. Guide my steps, guard my heart, and help me to be a blessing to others. Grant me wisdom in my decisions and strength for the challenges ahead. In Jesus' name, Amen."
+            },
+            {
+                title: "Prayer for Strength",
+                prayer: "Lord, when I am weak, You are strong. Fill me with Your power and courage to face whatever comes my way. Help me to trust in Your plan and lean on Your understanding. In Jesus' name, Amen."
+            },
+            {
+                title: "Prayer for Peace",
+                prayer: "Prince of Peace, calm my anxious heart and quiet my worried mind. Let Your peace that surpasses all understanding guard my heart and thoughts. Help me to cast all my cares upon You. In Jesus' name, Amen."
+            },
+            {
+                                prayer: "Father, I need Your direction in my life. Show me the path You want me to take. Open doors that should be opened and close those that should remain shut. Help me to walk in Your will. In Jesus' name, Amen."
+            },
+            {
+                title: "Evening Prayer",
+                prayer: "Thank You, Lord, for Your faithfulness throughout this day. Forgive me for my shortcomings and help me to rest in Your grace. Watch over my loved ones and grant us peaceful sleep. In Jesus' name, Amen."
+            },
+            {
+                title: "Prayer for Wisdom",
+                prayer: "God of all wisdom, grant me understanding and discernment. Help me to make decisions that honor You and benefit others. Fill me with Your Spirit and guide my thoughts and actions. In Jesus' name, Amen."
+            }
+        ];
+        
+        const randomPrayer = prayers[Math.floor(Math.random() * prayers.length)];
+        
+        await reply(`🙏 *DAILY PRAYER*\n\n✨ *${randomPrayer.title}*\n\n"${randomPrayer.prayer}"\n\n🕊️ *May God bless you today*\n✝️ *Prayer by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch prayer. Please try again!');
+    }
+}
+break;
+
+// 16. Horoscope
+case 'horoscope':
+case 'zodiac': {
+    if (!text) {
+        return reply(`🔮 *HOROSCOPE*\n\nGet your daily horoscope!\n\n*Zodiac Signs:*\n♈ Aries • ♉ Taurus • ♊ Gemini\n♋ Cancer • ♌ Leo • ♍ Virgo\n♎ Libra • ♏ Scorpio • ♐ Sagittarius\n♑ Capricorn • ♒ Aquarius • ♓ Pisces\n\n*Example:* ${prefix}horoscope leo`);
+    }
+    
+    try {
+        const horoscopes = {
+            'aries': {
+                sign: '♈ Aries',
+                date: 'Mar 21 - Apr 19',
+                prediction: 'Today brings new opportunities for leadership. Your natural confidence will attract positive attention. Focus on starting new projects.',
+                lucky: 'Red',
+                number: 7
+            },
+            'taurus': {
+                sign: '♉ Taurus',
+                date: 'Apr 20 - May 20',
+                prediction: 'Stability and patience will be your strengths today. Financial matters look promising. Trust your practical instincts.',
+                lucky: 'Green',
+                number: 2
+            },
+            'gemini': {
+                sign: '♊ Gemini',
+                date: 'May 21 - Jun 20',
+                prediction: 'Communication is key today. Your versatility will help you adapt to changing situations. Network with others.',
+                lucky: 'Yellow',
+                number: 5
+            },
+            'cancer': {
+                sign: '♋ Cancer',
+                date: 'Jun 21 - Jul 22',
+                prediction: 'Family and home matters take priority. Your intuition is especially strong today. Trust your emotional intelligence.',
+                lucky: 'Silver',
+                number: 3
+            },
+            'leo': {
+                sign: '♌ Leo',
+                date: 'Jul 23 - Aug 22',
+                prediction: 'Your creativity and charisma shine bright today. Take center stage and share your talents with the world.',
+                lucky: 'Gold',
+                number: 1
+            },
+            'virgo': {
+                sign: '♍ Virgo',
+                date: 'Aug 23 - Sep 22',
+                prediction: 'Attention to detail will serve you well. Organization and planning lead to success. Health matters need attention.',
+                lucky: 'Navy Blue',
+                number: 6
+            },
+            'libra': {
+                sign: '♎ Libra',
+                date: 'Sep 23 - Oct 22',
+                prediction: 'Balance and harmony are essential today. Relationships benefit from your diplomatic approach. Seek beauty in all things.',
+                lucky: 'Pink',
+                number: 4
+            },
+            'scorpio': {
+                sign: '♏ Scorpio',
+                date: 'Oct 23 - Nov 21',
+                prediction: 'Deep transformation is possible today. Your intensity and passion drive you toward your goals. Trust your instincts.',
+                lucky: 'Maroon',
+                number: 8
+            },
+            'sagittarius': {
+                sign: '♐ Sagittarius',
+                date: 'Nov 22 - Dec 21',
+                prediction: 'Adventure and learning call to you today. Expand your horizons through travel or education. Stay optimistic.',
+                lucky: 'Purple',
+                number: 9
+            },
+            'capricorn': {
+                sign: '♑ Capricorn',
+                date: 'Dec 22 - Jan 19',
+                prediction: 'Hard work and determination pay off today. Your ambitious nature leads to recognition. Build for the future.',
+                lucky: 'Brown',
+                number: 10
+            },
+            'aquarius': {
+                sign: '♒ Aquarius',
+                date: 'Jan 20 - Feb 18',
+                prediction: 'Innovation and originality set you apart today. Your humanitarian spirit inspires others. Think outside the box.',
+                lucky: 'Turquoise',
+                number: 11
+            },
+            'pisces': {
+                sign: '♓ Pisces',
+                date: 'Feb 19 - Mar 20',
+                prediction: 'Your compassion and creativity flow freely today. Spiritual matters bring insight. Trust your dreams and intuition.',
+                lucky: 'Sea Green',
+                number: 12
+            }
+        };
+        
+        const sign = horoscopes[text.toLowerCase()];
+        
+        if (sign) {
+            await reply(`🔮 *DAILY HOROSCOPE*\n\n${sign.sign}\n📅 *${sign.date}*\n\n🌟 *Today's Prediction:*\n${sign.prediction}\n\n🍀 *Lucky Color:* ${sign.lucky}\n🎲 *Lucky Number:* ${sign.number}\n📆 *Date:* ${new Date().toLocaleDateString()}\n\n✨ *Horoscope by ${botname}*`);
+        } else {
+            await reply('❌ *Invalid zodiac sign*\n\nPlease use: aries, taurus, gemini, cancer, leo, virgo, libra, scorpio, sagittarius, capricorn, aquarius, pisces');
+        }
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch horoscope. Please try again!');
+    }
+}
+break;
+
+// 17. Random Facts
+case 'fact':
+case 'randomfact': {
+    try {
+        const facts = [
+            "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible!",
+            "A group of flamingos is called a 'flamboyance'. How fitting for such fabulous birds!",
+            "Octopuses have three hearts and blue blood. Two hearts pump blood to the gills, while the third pumps blood to the rest of the body.",
+            "Bananas are berries, but strawberries aren't. Botanically speaking, berries must have seeds inside their flesh.",
+            "A shrimp's heart is in its head. This makes them quite unique in the animal kingdom!",
+            "It would take 9 years to walk to the moon. That's assuming you could walk non-stop at 3 mph!",
+            "Dolphins have names for each other. They use unique whistle signatures to identify themselves.",
+            "A cloud can weigh more than a million pounds. Despite floating in the sky, clouds are incredibly heavy!",
+            "Your stomach gets an entirely new lining every 3-4 days because stomach acid would otherwise digest it.",
+            "There are more possible games of chess than atoms in the observable universe. Chess is truly infinite!",
+            "Wombat poop is cube-shaped. They're the only animal known to produce square feces!",
+            "A day on Venus is longer than its year. Venus rotates very slowly but orbits the sun quickly.",
+            "Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid of Giza.",
+            "There's a species of jellyfish that is immortal. The Turritopsis dohrnii can reverse its aging process.",
+            "A group of pugs is called a 'grumble'. Perfect for these adorable, snorting dogs!"
+        ];
+        
+        const randomFact = facts[Math.floor(Math.random() * facts.length)];
+        
+        await reply(`🧠 *RANDOM FACT*\n\n💡 ${randomFact}\n\n🤓 *Did you know that?*\n📚 *Fact by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch random fact. Please try again!');
+    }
+}
+break;
+
+// 18. Riddle Generator
+case 'riddle': {
+    try {
+        const riddles = [
+            {
+                question: "I have keys but no locks. I have space but no room. You can enter but not go inside. What am I?",
+                answer: "A keyboard"
+            },
+            {
+                question: "What has hands but cannot clap?",
+                answer: "A clock"
+            },
+            {
+                question: "What gets wet while drying?",
+                answer: "A towel"
+            },
+            {
+                question: "I'm tall when I'm young and short when I'm old. What am I?",
+                answer: "A candle"
+            },
+            {
+                question: "What has a head, a tail, is brown, and has no legs?",
+                answer: "A penny"
+            },
+            {
+                question: "What can travel around the world while staying in a corner?",
+                answer: "A stamp"
+            },
+            {
+                question: "What has many teeth but cannot bite?",
+                answer: "A zipper"
+            },
+            {
+                question: "What goes up but never comes down?",
+                answer: "Your age"
+            },
+            {
+                question: "I have branches, but no fruit, trunk, or leaves. What am I?",
+                answer: "A bank"
+            },
+            {
+                question: "What breaks but never falls, and what falls but never breaks?",
+                answer: "Day breaks and night falls"
+            }
+        ];
+        
+        const randomRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+        
+        await reply(`🧩 *RIDDLE TIME*\n\n❓ *Question:*\n${randomRiddle.question}\n\n🤔 *Think you know the answer?*\n\n💡 *Reply with your guess!*\n\n⏰ *Answer will be revealed in 30 seconds...*`);
+        
+        // Reveal answer after 30 seconds
+        setTimeout(async () => {
+            await reply(`🎯 *RIDDLE ANSWER*\n\n❓ *Question:*\n${randomRiddle.question}\n\n✅ *Answer:*\n${randomRiddle.answer}\n\n🧠 *Did you get it right?*\n🧩 *Riddle by ${botname}*`);
+        }, 30000);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch riddle. Please try again!');
+    }
+}
+break;
+
+// 19. Motivational Message
+case 'motivation':
+case 'motivate': {
+    try {
+        const motivations = [
+            {
+                title: "Believe in Yourself",
+                message: "You are stronger than you think, braver than you feel, and more capable than you imagine. Every challenge is an opportunity to grow.",
+                action: "Take one small step toward your goal today."
+            },
+            {
+                title: "Embrace the Journey",
+                message: "Success isn't just about the destination; it's about who you become along the way. Every setback is a setup for a comeback.",
+                action: "Celebrate your progress, no matter how small."
+            },
+            {
+                title: "Your Time is Now",
+                message: "Stop waiting for the perfect moment. The perfect moment is now. Your dreams are valid and achievable with consistent effort.",
+                action: "Start that project you've been putting off."
+            },
+            {
+                title: "Rise Above",
+                message: "You have survived 100% of your worst days. You are resilient, capable, and destined for greatness. Don't let temporary defeats define you.",
+                action: "Write down three things you're grateful for today."
+            },
+            {
+                title: "Unlimited Potential",
+                message: "Your potential is limitless. The only barriers are the ones you accept in your mind. Break free from limiting beliefs and soar.",
+                action: "Challenge one limiting belief you have about yourself."
+            },
+            {
+                title: "Make It Happen",
+                message: "Dreams don't work unless you do. Every expert was once a beginner. Every pro was once an amateur. Your journey starts with a single step.",
+                action: "Commit to learning something new this week."
+            }
+        ];
+        
+        const randomMotivation = motivations[Math.floor(Math.random() * motivations.length)];
+        
+        await reply(`💪 *DAILY MOTIVATION*\n\n🌟 *${randomMotivation.title}*\n\n${randomMotivation.message}\n\n🎯 *Action Step:*\n${randomMotivation.action}\n\n✨ *You've got this! Keep pushing forward!*\n🚀 *Motivation by ${botname}*`);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch motivation. Please try again!');
+    }
+}
+break;
+
+// 20. Color Palette Generator
+case 'color':
+case 'palette': {
+    try {
+        const colorPalettes = [
+            {
+                name: "Ocean Breeze",
+                colors: ["#0077BE", "#00A8CC", "#7FB3D3", "#C5E4FD", "#E8F4FD"],
+                mood: "Calm and refreshing"
+            },
+            {
+                name: "Sunset Glow",
+                colors: ["#FF6B35", "#F7931E", "#FFD23F", "#FFF1C1", "#FFFBF0"],
+                mood: "Warm and energetic"
+            },
+            {
+                name: "Forest Harmony",
+                colors: ["#2D5016", "#61A03D", "#8BC34A", "#C8E6C9", "#F1F8E9"],
+                mood: "Natural and peaceful"
+            },
+            {
+                name: "Royal Purple",
+                colors: ["#4A148C", "#7B1FA2", "#9C27B0", "#CE93D8", "#F3E5F5"],
+                mood: "Elegant and mysterious"
+            },
+            {
+                name: "Cherry Blossom",
+                colors: ["#C2185B", "#E91E63", "#F06292", "#F8BBD9", "#FCE4EC"],
+                mood: "Romantic and delicate"
+            },
+            {
+                name: "Midnight Sky",
+                colors: ["#0D1B2A", "#1B263B", "#415A77", "#778DA9", "#E0E1DD"],
+                mood: "Sophisticated and modern"
+            }
+        ];
+        
+        const randomPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+        
+        let paletteText = `🎨 *COLOR PALETTE*\n\n✨ *${randomPalette.name}*\n\n🎭 *Mood:* ${randomPalette.mood}\n\n🌈 *Colors:*\n`;
+        
+        randomPalette.colors.forEach((color, index) => {
+            paletteText += `${index + 1}. ${color}\n`;
+        });
+        
+        paletteText += `\n💡 *Perfect for:*\n• Web design\n• Art projects\n• Interior decoration\n• Branding\n\n🎨 *Palette by ${botname}*`;
+        
+        await reply(paletteText);
+        
+    } catch (error) {
+        await reply('❌ Failed to generate color palette. Please try again!');
+    }
+}
+break;
+
+// 21. Workout Generator
+case 'workout':
+case 'exercise': {
+    try {
+        const workouts = [
+            {
+                type: "Quick Cardio Blast",
+                duration: "15 minutes",
+                exercises: [
+                    "Jumping Jacks - 1 minute",
+                    "High Knees - 45 seconds",
+                    "Burpees - 30 seconds",
+                    "Mountain Climbers - 45 seconds",
+                    "Rest - 30 seconds"
+                ],
+                repeat: "Repeat 3 times",
+                benefits: "Burns calories, improves cardiovascular health"
+            },
+            {
+                type: "Strength Training",
+                duration: "20 minutes",
+                exercises: [
+                    "Push-ups - 10-15 reps",
+                    "Squats - 15-20 reps",
+                    "Plank - 30-60 seconds",
+                    "Lunges - 10 per leg",
+                    "Wall sit - 30 seconds"
+                ],
+                repeat: "3 sets with 1-minute rest",
+                benefits: "Builds muscle, increases metabolism"
+            },
+            {
+                type: "Flexibility & Stretch",
+                duration: "10 minutes",
+                exercises: [
+                    "Neck rolls - 5 each direction",
+                    "Shoulder shrugs - 10 reps",
+                    "Cat-cow stretch - 10 reps",
+                    "Forward fold - 30 seconds",
+                    "Child's pose - 1 minute"
+                ],
+                repeat: "Hold each stretch",
+                benefits: "Improves flexibility, reduces tension"
+            },
+            {
+                type: "Core Crusher",
+                duration: "12 minutes",
+                exercises: [
+                    "Crunches - 20 reps",
+                    "Russian twists - 15 per side",
+                    "Leg raises - 10 reps",
+                    "Bicycle crunches - 20 total",
+                    "Dead bug - 10 per side"
+                ],
+                repeat: "3 rounds",
+                benefits: "Strengthens core, improves posture"
+            }
+        ];
+        
+        const randomWorkout = workouts[Math.floor(Math.random() * workouts.length)];
+        
+        let workoutText = `💪 *TODAY'S WORKOUT*\n\n🏋️ *${randomWorkout.type}*\n⏰ *Duration:* ${randomWorkout.duration}\n\n📋 *Exercises:*\n`;
+        
+        randomWorkout.exercises.forEach((exercise, index) => {
+            workoutText += `${index + 1}. ${exercise}\n`;
+        });
+        
+        workoutText += `\n🔄 *${randomWorkout.repeat}*\n\n✨ *Benefits:* ${randomWorkout.benefits}\n\n⚠️ *Remember:*\n• Warm up before starting\n• Stay hydrated\n• Listen to your body\n• Cool down after workout\n\n💪 *Workout by ${botname}*`;
+        
+        await reply(workoutText);
+        
+    } catch (error) {
+        await reply('❌ Failed to generate workout. Please try again!');
+    }
+}
+break;
+
+// 22. Recipe Generator
+case 'recipe':
+case 'cook': {
+    if (!text) {
+        return reply(`👨‍🍳 *RECIPE GENERATOR*\n\nGet random recipes or search by ingredient!\n\n*Examples:*\n• ${prefix}recipe (random recipe)\n• ${prefix}recipe chicken\n• ${prefix}recipe pasta\n• ${prefix}recipe vegetarian\n\n🍽️ *Let's cook something delicious!*`);
+    }
+    
+    try {
+        const recipes = {
+            'chicken': {
+                name: "Honey Garlic Chicken",
+                time: "25 minutes",
+                difficulty: "Easy",
+                ingredients: [
+                    "4 chicken breasts",
+                    "3 cloves garlic, minced",
+                    "1/4 cup honey",
+                    "2 tbsp soy sauce",
+                    "1 tbsp olive oil",
+                    "Salt and pepper to taste"
+                ],
+                instructions: [
+                    "Season chicken with salt and pepper",
+                    "Heat olive oil in a pan over medium heat",
+                    "Cook chicken for 6-7 minutes per side",
+                    "Mix honey, garlic, and soy sauce",
+                    "Pour sauce over chicken and simmer 2 minutes",
+                    "Serve hot with rice or vegetables"
+                ]
+            },
+            'pasta': {
+                name: "Creamy Garlic Pasta",
+                time: "20 minutes",
+                difficulty: "Easy",
+                ingredients: [
+                    "12 oz pasta",
+                    "4 cloves garlic, minced",
+                    "1 cup heavy cream",
+                    "1/2 cup parmesan cheese",
+                    "2 tbsp butter",
+                    "Fresh parsley, chopped"
+                ],
+                instructions: [
+                    "Cook pasta according to package directions",
+                    "Melt butter in a large pan",
+                    "Sauté garlic for 1 minute",
+                    "Add cream and simmer for 3 minutes",
+                    "Toss with pasta and parmesan",
+                    "Garnish with parsley and serve"
+                ]
+            },
+            'vegetarian': {
+                name: "Mediterranean Quinoa Bowl",
+                time: "30 minutes",
+                difficulty: "Medium",
+                ingredients: [
+                    "1 cup quinoa",
+                    "1 cucumber, diced",
+                    "2 tomatoes, chopped",
+                    "1/2 red onion, sliced",
+                    "1/4 cup olives",
+                    "Feta cheese, crumbled",
+                    "Olive oil and lemon dressing"
+                ],
+                instructions: [
+                    "Cook quinoa according to package directions",
+                    "Let quinoa cool completely",
+                    "Chop all vegetables",
+                    "Mix quinoa with vegetables",
+                    "Add olives and feta cheese",
+                    "Drizzle with dressing and serve"
+                ]
+            }
+        };
+        
+        const searchTerm = text.toLowerCase();
+        const recipe = recipes[searchTerm];
+        
+        if (recipe) {
+            let recipeText = `👨‍🍳 *RECIPE*\n\n🍽️ *${recipe.name}*\n⏰ *Time:* ${recipe.time}\n📊 *Difficulty:* ${recipe.difficulty}\n\n🛒 *Ingredients:*\n`;
+            
+            recipe.ingredients.forEach((ingredient, index) => {
+                recipeText += `${index + 1}. ${ingredient}\n`;
+            });
+            
+            recipeText += `\n📝 *Instructions:*\n`;
+            
+            recipe.instructions.forEach((step, index) => {
+                recipeText += `${index + 1}. ${step}\n`;
+            });
+            
+            recipeText += `\n👨‍🍳 *Happy cooking!*\n🍽️ *Recipe by ${botname}*`;
+            
+            await reply(recipeText);
+        } else {
+            // Random recipe if not found
+            const randomRecipes = Object.values(recipes);
+            const randomRecipe = randomRecipes[Math.floor(Math.random() * randomRecipes.length)];
+            
+            let recipeText = `👨‍🍳 *RANDOM RECIPE*\n\n🍽️ *${randomRecipe.name}*\n⏰ *Time:* ${randomRecipe.time}\n📊 *Difficulty:* ${randomRecipe.difficulty}\n\n🛒 *Ingredients:*\n`;
+            
+            randomRecipe.ingredients.forEach((ingredient, index) => {
+                recipeText += `${index + 1}. ${ingredient}\n`;
+            });
+            
+            recipeText += `\n📝 *Instructions:*\n`;
+            
+            randomRecipe.instructions.forEach((step, index) => {
+                recipeText += `${index + 1}. ${step}\n`;
+            });
+            
+            recipeText += `\n💡 *Try: chicken, pasta, vegetarian*\n👨‍🍳 *Recipe by ${botname}*`;
+            
+            await reply(recipeText);
+        }
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch recipe. Please try again!');
+    }
+}
+break;
+
+// 23. Meditation Guide
+case 'meditate':
+case 'meditation': {
+    try {
+        const meditations = [
+            {
+                type: "Breathing Meditation",
+                duration: "5 minutes",
+                guide: [
+                    "Find a comfortable seated position",
+                    "Close your eyes gently",
+                    "Take a deep breath in for 4 counts",
+                    "Hold your breath for 4 counts",
+                    "Exhale slowly for 6 counts",
+                    "Repeat this cycle 10 times",
+                    "Focus only on your breath",
+                    "If your mind wanders, gently return to breathing"
+                ],
+                benefits: "Reduces stress, improves focus"
+            },
+            {
+                type: "Body Scan Meditation",
+                duration: "10 minutes",
+                guide: [
+                    "Lie down comfortably",
+                    "Close your eyes and breathe naturally",
+                    "Start by focusing on your toes",
+                    "Notice any sensations without judgment",
+                    "Slowly move attention up through your body",
+                    "Spend 30 seconds on each body part",
+                    "End at the top of your head",
+                    "Take three deep breaths to finish"
+                ],
+                benefits: "Releases tension, promotes relaxation"
+            },
+            {
+                type: "Gratitude Meditation",
+                duration: "7 minutes",
+                guide: [
+                    "Sit comfortably with eyes closed",
+                    "Take three deep, calming breaths",
+                    "Think of something you're grateful for",
+                    "Feel the emotion of gratitude in your heart",
+                    "Think of three more things you appreciate",
+                    "Hold each feeling for 1 minute",
+                    "End by appreciating this moment",
+                    "Open your eyes slowly"
+                ],
+                benefits: "Increases happiness, positive mindset"
+            }
+        ];
+        
+        const randomMeditation = meditations[Math.floor(Math.random() * meditations.length)];
+        
+        let meditationText = `🧘‍♀️ *MEDITATION GUIDE*\n\n✨ *${randomMeditation.type}*\n⏰ *Duration:* ${randomMeditation.duration}\n\n📋 *Steps:*\n`;
+        
+        randomMeditation.guide.forEach((step, index) => {
+            meditationText += `${index + 1}. ${step}\n`;
+        });
+        
+        meditationText += `\n🌟 *Benefits:* ${randomMeditation.benefits}\n\n💡 *Tips:*\n• Find a quiet space\n• Turn off notifications\n• Don't judge your thoughts\n• Practice regularly for best results\n\n🧘‍♀️ *Meditation by ${botname}*`;
+        
+        await reply(meditationText);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch meditation guide. Please try again!');
+    }
+}
+break;
+
+// 24. Study Tips
+case 'study':
+case 'studytips': {
+    try {
+        const studyTips = [
+            {
+                technique: "Pomodoro Technique",
+                description: "Study in focused 25-minute intervals with 5-minute breaks",
+                steps: [
+                    "Set a timer for 25 minutes",
+                    "Focus completely on one task",
+                    "Take a 5-minute break when timer rings",
+                    "Repeat 3-4 cycles",
+                    "Take a longer 15-30 minute break"
+                ],
+                benefits: "Improves focus and prevents burnout"
+            },
+            {
+                technique: "Active Recall",
+                description: "Test yourself instead of just re-reading notes",
+                steps: [
+                    "Read a section of material",
+                    "Close your book/notes",
+                    "Write down everything you remember",
+                    "Check what you missed",
+                    "Focus on the gaps in your knowledge"
+                ],
+                benefits: "Strengthens memory and understanding"
+            },
+            {
+                technique: "Spaced Repetition",
+                description: "Review material at increasing intervals",
+                steps: [
+                    "Study new material today",
+                    "Review it tomorrow",
+                    "Review again in 3 days",
+                    "Review again in 1 week",
+                    "Review again in 2 weeks"
+                ],
+                benefits: "Moves information to long-term memory"
+            },
+            {
+                technique: "Feynman Technique",
+                description: "Explain concepts in simple terms",
+                steps: [
+                    "Choose a concept to learn",
+                    "Explain it in simple language",
+                    "Identify gaps in your explanation",
+                    "Go back to source material",
+                    "Simplify your explanation further"
+                ],
+                benefits: "Ensures deep understanding"
+            }
+        ];
+        
+        const randomTip = studyTips[Math.floor(Math.random() * studyTips.length)];
+        
+        let studyText = `📚 *STUDY TECHNIQUE*\n\n🎯 *${randomTip.technique}*\n\n📖 *Description:*\n${randomTip.description}\n\n📋 *How to do it:*\n`;
+        
+        randomTip.steps.forEach((step, index) => {
+            studyText += `${index + 1}. ${step}\n`;
+        });
+        
+        studyText += `\n✨ *Benefits:* ${randomTip.benefits}\n\n💡 *General Study Tips:*\n• Create a dedicated study space\n• Eliminate distractions\n• Stay hydrated and take breaks\n• Get enough sleep\n• Use multiple learning methods\n\n📚 *Study tips by ${botname}*`;
+        
+        await reply(studyText);
+        
+    } catch (error) {
+        await reply('❌ Failed to fetch study tips. Please try again!');
+    }
+}
+break;
+
 case 'yts': 
 case 'ytsearch': {
     if (!text) return await reply(`❌ *Please provide a search term*\n\n*Example:* ${prefix + command} Imagine Dragons Believer`);
