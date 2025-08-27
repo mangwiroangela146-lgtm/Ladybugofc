@@ -16,7 +16,6 @@ const settings = require('./settings')
 const { getBuffer, fetchJson, runtime, sleep } = require('./lib/myfunc')
 // Configuration - Add at the top of your bot file
 const OWNER_NUMBER = '263777124998@s.whatsapp.net';
-const fs = require('fs');
 
 // Bot configuration
 const ownername = 'XEON';
